@@ -70,7 +70,7 @@ export default function Products() {
                   )}
                   {k === 1 && (
                     <>
-                      <div className="sparkle" style={{ top: 0, left: "2%", width: 28, height: 28, background: "var(--cheese)" }} aria-hidden="true" />
+                      <div className="sparkle" style={{ top: 0, left: "2%", width: 28, height: 28, background: "var(--red)" }} aria-hidden="true" />
                       <div className="bolt" style={{ top: "8%", right: "-6%", width: 30, height: 46, background: "var(--ink)" }} aria-hidden="true" />
                     </>
                   )}
@@ -101,17 +101,8 @@ export default function Products() {
                 <Corner pos="tl">La carta · {num}</Corner>
                 <Corner pos="br">{num} / 03</Corner>
                 <div className="product__inner">
-                  {k === 2 ? (
-                    <>
-                      {art}
-                      {copy}
-                    </>
-                  ) : (
-                    <>
-                      {copy}
-                      {art}
-                    </>
-                  )}
+                  {copy}
+                  {art}
                 </div>
               </article>
             );

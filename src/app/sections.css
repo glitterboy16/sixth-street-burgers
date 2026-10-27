@@ -519,15 +519,6 @@
   background: var(--cheese);
   color: var(--ink);
 }
-.product--2::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 50%;
-  height: 100%;
-  background: var(--red);
-}
 .product--2 .corner {
   opacity: 1;
 }
@@ -547,9 +538,6 @@
   align-items: center;
   gap: 24px;
   padding: 64px var(--gutter) 56px;
-}
-.product--3 .product__inner {
-  flex-wrap: wrap-reverse;
 }
 .product__copy {
   flex: 1 1 280px;

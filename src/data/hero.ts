@@ -14,81 +14,81 @@ export type HeroLayer = {
 };
 
 export const HERO = {
-  frame: { width: 1744, height: 2336 },
+  frame: { width: 3584, height: 4778 },
   layers: [
     {
-      "file": "capa-1.webp",
-      "width": 1400,
-      "height": 365,
-      "top": 5.48,
-      "h": 19.48,
+      "file": "capa-1-v2.webp",
+      "width": 1800,
+      "height": 466,
+      "top": 5.34,
+      "h": 19.4,
       "band": [
-        5.61,
-        24.66
+        5.4,
+        24.59
       ],
       "x": [
-        18.18,
-        81.19
+        18.25,
+        81.28
       ]
     },
     {
-      "file": "capa-2.webp",
-      "width": 1400,
-      "height": 269,
-      "top": 26.76,
-      "h": 14.34,
+      "file": "capa-2-v2.webp",
+      "width": 1800,
+      "height": 342,
+      "top": 26.77,
+      "h": 14.23,
       "band": [
-        27.01,
-        40.8
+        26.89,
+        40.85
       ],
       "x": [
-        12.39,
-        86.35
+        12.36,
+        86.5
       ]
     },
     {
-      "file": "capa-3.webp",
-      "width": 1400,
-      "height": 212,
-      "top": 41.27,
-      "h": 11.3,
+      "file": "capa-3-v2.webp",
+      "width": 1800,
+      "height": 300,
+      "top": 41.38,
+      "h": 12.52,
       "band": [
-        41.52,
-        52.53
+        41.5,
+        52.76
       ],
       "x": [
-        18.23,
-        79.47
+        18.25,
+        79.63
       ]
     },
     {
-      "file": "capa-4.webp",
-      "width": 1400,
-      "height": 415,
-      "top": 52.57,
-      "h": 22.13,
+      "file": "capa-4-v2.webp",
+      "width": 1800,
+      "height": 528,
+      "top": 52.78,
+      "h": 22,
       "band": [
-        52.57,
-        74.4
+        52.78,
+        74.63
       ],
       "x": [
-        15.71,
-        82.45
+        15.76,
+        82.56
       ]
     },
     {
-      "file": "capa-5.webp",
-      "width": 1400,
-      "height": 344,
-      "top": 75.13,
-      "h": 18.32,
+      "file": "capa-5-v2.webp",
+      "width": 1800,
+      "height": 439,
+      "top": 75.37,
+      "h": 18.31,
       "band": [
-        75.39,
-        93.28
+        75.49,
+        93.6
       ],
       "x": [
-        18.46,
-        80.79
+        18.53,
+        80.89
       ]
     }
   ] as HeroLayer[],
