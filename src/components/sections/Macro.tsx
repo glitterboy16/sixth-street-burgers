@@ -18,7 +18,7 @@ export default function Macro() {
       const rc = sec.getBoundingClientRect();
       const vh = window.innerHeight;
       const v = clamp((vh - rc.top) / (vh + rc.height), 0, 1);
-      el.style.transform = `scale(${1.15 - 0.15 * v})`;
+      el.style.transform = `scale(${1.08 - 0.08 * v})`;
     });
   }, []);
 

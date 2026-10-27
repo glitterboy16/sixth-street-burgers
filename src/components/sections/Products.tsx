@@ -60,7 +60,7 @@ export default function Products() {
                     }}
                     className="product__photo"
                   >
-                    <ImageSlot id={p.slot} shape="circle" sizes="(max-width: 640px) 80vw, 46vmin" />
+                    <ImageSlot id={p.slot} shape="circle" sizes="(max-width: 640px) 90vw, 76vmin" />
                   </div>
                   {k === 0 && (
                     <>

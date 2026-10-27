@@ -73,7 +73,7 @@ export const slots: Record<SlotId, SlotImage | null> = {
     src: "/images/macro-queso-carne.webp",
     alt: "Primer plano del cheddar fundido cayendo sobre el borde crujiente de la carne",
     width: 3840,
-    height: 2160,
+    height: 2143,
   },
   "coge-la-tuya-burger": burgerCerrada("Smash burger de Sixth Street cerrada"),
   "manifiesto-burger": burgerCerrada("Smash burger de Sixth Street cerrada"),
