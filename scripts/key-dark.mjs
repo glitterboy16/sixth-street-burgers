@@ -17,6 +17,7 @@ const cl = (v, a, b) => (v < a ? a : v > b ? b : v);
 export const DEFAULTS = {
   lo: 10, // diferencia (0-255) a partir de la que empieza el objeto
   hi: 28, // ... y a partir de la que es opaco del todo
+  minArea: 120, // componentes sueltos (motas del códec) con menos píxeles se descartan
   fill: true, // rellenar los huecos que no tocan el fondo exterior
   maxHole: 6000, // ... solo si tienen menos de tantos píxeles (a 1440×1920: grietas, no el aire entre capas)
 };
@@ -80,7 +81,34 @@ export async function keyDark(file, o = {}) {
       }
     return dst;
   };
-  const al = pass(pass(pass(a0, "min"), "max"), "mean");
+  // Motas: en vez de una apertura (que se come los hilos de queso finos), fuera los componentes sueltos de
+  // menos de minArea píxeles; los hilos, pegados a la hamburguesa, forman parte del componente grande.
+  {
+    const on = new Uint8Array(N);
+    for (let i = 0; i < N; i++) on[i] = a0[i] >= 0.5 ? 1 : 0;
+    const seenC = new Uint8Array(N);
+    const st = [];
+    const comp = [];
+    for (let i = 0; i < N; i++) {
+      if (!on[i] || seenC[i]) continue;
+      comp.length = 0;
+      seenC[i] = 1;
+      st.push(i);
+      while (st.length) {
+        const j = st.pop();
+        comp.push(j);
+        const x = j % w,
+          y = (j - x) / w;
+        for (const k of [x > 0 ? j - 1 : -1, x < w - 1 ? j + 1 : -1, y > 0 ? j - w : -1, y < h - 1 ? j + w : -1])
+          if (k >= 0 && on[k] && !seenC[k]) {
+            seenC[k] = 1;
+            st.push(k);
+          }
+      }
+      if (comp.length < opt.minArea) for (const j of comp) a0[j] = 0;
+    }
+  }
+  const al = pass(a0, "mean");
 
   // relleno: el fondo exterior es lo que se alcanza desde el borde del fotograma por píxeles casi
   // transparentes; todo lo demás (huecos encerrados) pasa a opaco. Los 2 px junto al exterior conservan su
