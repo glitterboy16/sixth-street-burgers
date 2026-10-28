@@ -18,6 +18,7 @@ import TodayHours from "@/components/kit/TodayHours";
 // el color del fondo que toca y no se nota de dónde salió. Misma coreografía en los dos.
 const MAX_SCALE = 1.7; // escritorio: la cerrada ocupa casi todo el escenario
 const MAX_SCALE_MOBILE = 1.9; // móvil: plano completo, casi todo el ancho de la pantalla
+const FILL = 97; // % del alto de la caja que ocupa la hamburguesa cuando el zoom lo permite: nunca se sale de ella
 const MOBILE_EDGE = 8; // px que la cerrada deja a cada lado de la pantalla en móvil
 const TEXT_GAP = 24; // px de aire entre el texto y la hamburguesa cerrada en escritorio: nunca se pisan
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
@@ -235,10 +236,26 @@ export default function Hero() {
       scaleMax = Math.max(1, Math.min(g.SCALE, (0.5 - limit) / (0.5 - x0)));
     };
 
+    // Caja vertical [arriba, abajo] (% del alto) de la hamburguesa en un punto de la apertura, interpolada
+    // entre los fotogramas medidos por scripts/frame-boxes.mjs (si faltan, entre la cerrada y la abierta).
+    const extentAt = (ff: number): [number, number] => {
+      const B = (cur.set as { boxes?: [number, number][] }).boxes;
+      if (B && B.length > 1) {
+        const f = ff * (B.length - 1);
+        const i0 = Math.min(B.length - 1, Math.floor(f));
+        const i1 = Math.min(B.length - 1, i0 + 1);
+        const t = f - i0;
+        return [B[i0][0] + (B[i1][0] - B[i0][0]) * t, B[i0][1] + (B[i1][1] - B[i0][1]) * t];
+      }
+      const ob = cur.set.openBands;
+      const oTop = ob.length ? ob[0][0] : 5,
+        oBottom = ob.length ? ob[ob.length - 1][1] : 94;
+      return [g.C.top + (oTop - g.C.top) * ff, g.C.bottom + (oBottom - g.C.bottom) * ff];
+    };
+
     const draw = () => {
       // ff: 1 = abierta, 0 = cerrada. Campana: cerrada → abierta (meseta 0,44-0,56) → cerrada.
       const ff = sm(p, 0.04, 0.44) * (1 - sm(p, 0.56, 0.96));
-      const cl = 1 - ff;
       const S = bx.offsetHeight;
 
       const i = near(Math.round(ff * (cur.n - 1)));
@@ -248,12 +265,17 @@ export default function Hero() {
         ctx.drawImage(cur.frames[i]!, 0, 0, width, height);
       }
 
-      // zoom, subida y centrado solo en el último tramo del cierre, cuando las capas ya casi se tocan
-      const cz = sm(cl, 0.45, 1);
-      const sc = 1 + (scaleMax - 1) * cz;
-      const sh = g.LIFT * cz;
+      // Zoom: crece en el último tramo del cierre (cz) pero nunca más de lo que deja la altura real de la
+      // hamburguesa en este punto (FILL % de la caja). Abierta = 1, cerrada = scaleMax, y en mitad de la
+      // transición, cuando las capas ya están separadas pero aún no del todo, jamás se sale de su caja.
+      const ext = extentAt(ff);
+      const cz = sm(1 - ff, 0.45, 1);
+      const sc = Math.max(1, Math.min(scaleMax, FILL / Math.max(1, ext[1] - ext[0]), 1 + (scaleMax - 1) * cz));
+      const c = (ext[0] + ext[1]) / 2;
+      const sh = (50 - (g.CY + (c - g.CY) * sc)) / 100; // fracción del alto de la caja
       bx.style.transform = `translateY(${sh * S}px) scale(${sc})`;
-      curTx = tx * cz;
+      const k = scaleMax > 1 ? (sc - 1) / (scaleMax - 1) : 0; // 0 abierta → 1 cerrada: centrado en móvil
+      curTx = tx * k;
       sq.style.transform = curTx ? `translateX(${curTx}px)` : "";
 
       // la sombra de contacto desaparece al despegar las capas
