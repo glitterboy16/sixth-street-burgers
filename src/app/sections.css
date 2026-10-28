@@ -447,58 +447,160 @@
   width: min(60%, 560px);
 }
 
-/* ===== 04 Elige la tuya ===== */
+/* ===== 04 Bienvenido al club (antes "Elige la tuya") ===== */
+/* El rombo del cartel a pantalla completa, en primer plano y un poco en diagonal; el eslogan va en la esquina
+   superior izquierda (el hueco que deja el rombo) y alrededor flechas y puntos de marquesina. Fondo negro en el
+   tema oscuro (el neón luce sobre negro), rojo en el claro con el sello en tinta papel. */
 .choose {
-  background: var(--red);
+  background: #000;
   color: var(--paper);
+  --corner: var(--paper);
+  --deco: var(--cheese);
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+}
+:root[data-theme="light"] .choose {
+  background: var(--red);
   --corner: var(--ink);
-  min-height: 72vh;
-  display: flex;
-  align-items: center;
+  --deco: var(--paper);
 }
-.choose__row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 32px;
+.choose__stage {
+  position: relative;
   width: 100%;
+  min-height: calc(100svh - 2 * var(--sec-pt));
+  display: grid;
+  place-items: center;
 }
-.choose h2 {
-  font-size: clamp(64px, 11vw, 170px);
+.choose .choose__title {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  max-width: 34%;
+  font-size: clamp(40px, 5.6vw, 92px);
+  line-height: 0.9;
 }
-.choose__arrow {
-  --from: scale(0.7);
-  --to: none;
-  --ease: var(--ease-pop);
-  --delay: 0.2s;
-}
-/* El rombo a plano completo. La sección es roja: en el tema claro el sello va en tinta papel; en el oscuro el
-   neón necesita una placa negra detrás (un cartel colgado en la pared roja), el tubo no luce sobre rojo. */
 .choose__badge {
-  flex: 0 1 clamp(260px, 34vw, 500px);
-  min-width: 240px;
-  --from: scale(0.85) rotate(-4deg);
+  position: relative;
+  z-index: 2;
+  width: min(100%, calc((100svh - 2 * var(--sec-pt) - 48px) * 640 / 440));
+  --from: scale(0.85) rotate(-7deg);
   --to: rotate(-3deg);
   --delay: 0.15s;
-}
-.choose__badge::before {
-  content: "";
-  position: absolute;
-  inset: -3% -1.5%;
-  background: var(--ink);
-  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
-}
-:root[data-theme="light"] .choose__badge::before {
-  display: none;
 }
 :root[data-theme="light"] .choose__badge .badge__stamp {
   --stamp-ink: var(--paper);
 }
+.choose__arrow {
+  position: absolute;
+  z-index: 1;
+  --ease: var(--ease-pop);
+}
+.choose__arrow--big {
+  left: 3%;
+  top: 36%;
+  --from: scale(0.7) rotate(22deg);
+  --to: rotate(22deg);
+  --delay: 0.3s;
+}
+.choose__arrow--a {
+  right: 2%;
+  top: 14%;
+  --from: scale(0.7) rotate(150deg);
+  --to: rotate(150deg);
+  --delay: 0.4s;
+}
+.choose__arrow--b {
+  left: 8%;
+  bottom: 8%;
+  --from: scale(0.7) rotate(-28deg);
+  --to: rotate(-28deg);
+  --delay: 0.5s;
+}
+/* puntos de marquesina */
+.choose__dots {
+  position: absolute;
+  z-index: 1;
+  height: 8px;
+  background: radial-gradient(circle at 4px 4px, var(--deco) 2.6px, transparent 3.2px) 0 0 / 16px 8px repeat-x;
+  opacity: 0.9;
+  --from: scaleX(0);
+  --to: none;
+  transform-origin: left center;
+  --dur: 0.8s;
+}
+.choose__dots--a {
+  top: 7%;
+  right: 12%;
+  width: 24%;
+  --delay: 0.35s;
+}
+.choose__dots--b {
+  bottom: 7%;
+  left: 38%;
+  width: 28%;
+  --delay: 0.45s;
+  transform-origin: right center;
+}
+@media (max-width: 899px) {
+  .choose .choose__title {
+    max-width: 48%;
+    font-size: clamp(40px, 7.5vw, 72px);
+  }
+}
 @media (max-width: 639px) {
-  /* en móvil las dos esquinas superiores se pisaban */
+  /* móvil: eslogan arriba, el rombo a todo lo ancho (se sale un poco por los lados) y la flecha debajo */
   .choose .corner--tr {
     display: none;
+  }
+  .choose__stage {
+    grid-template-rows: auto 1fr;
+    align-items: center;
+    justify-items: center;
+  }
+  .choose .choose__title {
+    position: relative;
+    max-width: none;
+    justify-self: start;
+    font-size: clamp(44px, 13vw, 64px);
+    padding-top: 8px;
+  }
+  .choose__badge {
+    width: 118%;
+    max-width: none;
+    --from: scale(0.85) rotate(-11deg);
+    --to: rotate(-7deg);
+  }
+  .choose__arrow--big {
+    left: auto;
+    right: 4%;
+    top: auto;
+    bottom: 7%;
+    width: 160px;
+    height: 90px;
+    --from: scale(0.7) rotate(-160deg);
+    --to: rotate(-160deg);
+  }
+  .choose__arrow--a {
+    right: 4%;
+    top: 20%;
+    width: 72px;
+    height: 48px;
+  }
+  .choose__arrow--b {
+    display: none;
+  }
+  .choose__dots--a {
+    top: 24%;
+    right: auto;
+    left: 0;
+    width: 44%;
+  }
+  .choose__dots--b {
+    bottom: 12%;
+    left: 4%;
+    width: 36%;
   }
 }
 
