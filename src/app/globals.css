@@ -305,7 +305,17 @@ svg {
 .badge .t-script {
   font-family: var(--font-yellowtail), "Brush Script MT", cursive;
 }
-.badge .t-block {
+.badge /* "to Fabulous" parpadea de vez en cuando como el neón del navbar (solo existe en la versión neón) */
+.badge__fab {
+  animation: neon-idle 7s steps(1) infinite;
+  animation-delay: 1.4s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .badge__fab {
+    animation: none;
+  }
+}
+.t-block {
   font-family: var(--font-display);
 }
 .badge__stamp {

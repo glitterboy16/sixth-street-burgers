@@ -66,13 +66,15 @@ function Neon({ id }: { id: string }) {
           </text>
         </g>
       ))}
-      {/* to Fabulous */}
-      <text x={CX} y="178" textAnchor="middle" className="t-script" fontSize="44" fill="#19c3e6" stroke="#19c3e6" strokeWidth="5" filter={f} opacity="0.8">
-        to Fabulous
-      </text>
-      <text x={CX} y="178" textAnchor="middle" className="t-script" fontSize="44" fill="#dffbff" stroke="#3fd7f2" strokeWidth="1.2" paintOrder="stroke" strokeLinejoin="round">
-        to Fabulous
-      </text>
+      {/* to Fabulous: tubo azul con el mismo parpadeo ocioso que el BURGERS del navbar (.badge__fab) */}
+      <g className="badge__fab">
+        <text x={CX} y="178" textAnchor="middle" className="t-script" fontSize="44" fill="#19c3e6" stroke="#19c3e6" strokeWidth="5" filter={f} opacity="0.8">
+          to Fabulous
+        </text>
+        <text x={CX} y="178" textAnchor="middle" className="t-script" fontSize="44" fill="#dffbff" stroke="#3fd7f2" strokeWidth="1.2" paintOrder="stroke" strokeLinejoin="round">
+          to Fabulous
+        </text>
+      </g>
       {/* SIXTH STREET */}
       <text x={CX} y="262" textAnchor="middle" className="t-block" fontSize="84" letterSpacing="2" fill="#ffb000" stroke="#ffb000" strokeWidth="8" filter={f} opacity="0.8">
         SIXTH STREET
