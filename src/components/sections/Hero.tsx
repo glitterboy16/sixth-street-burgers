@@ -5,7 +5,7 @@ import Image from "next/image";
 import { FRAMES, type FrameSize } from "@/data/frames";
 import { FRAMES_DARK } from "@/data/frames-dark";
 import { heroLabels, site } from "@/data/site";
-import { onScroll, onThemeChange, prefersReducedMotion, sm, stageProgress } from "@/lib/motion";
+import { clamp, NAV_H, onThemeChange, prefersReducedMotion, sm } from "@/lib/motion";
 import Corner from "@/components/kit/Corner";
 import TodayHours from "@/components/kit/TodayHours";
 
@@ -99,9 +99,20 @@ export default function Hero() {
     const { width, height } = FRAMES.sizes[size]; // los dos juegos salen del mismo script: mismo tamaño
     cv.width = width;
     cv.height = height;
+    ctx.imageSmoothingQuality = "high";
 
     // Un caché de fotogramas por tema; solo se descarga el del tema que se está viendo.
-    type Cache = { set: FrameSet; frames: (HTMLImageElement | null)[]; n: number; order: number[]; next: number; started: boolean };
+    type Cache = {
+      set: FrameSet;
+      frames: (HTMLImageElement | null)[];
+      n: number;
+      order: number[];
+      next: number;
+      started: boolean;
+      bm: Map<number, ImageBitmap>; // fotogramas ya decodificados alrededor del actual (ventana deslizante)
+      pend: Set<number>;
+      center: number;
+    };
     const mkCache = (set: FrameSet): Cache => {
       const total = set.sizes[size].count;
       const n = Math.ceil(total / stride);
@@ -117,7 +128,7 @@ export default function Hero() {
       push(0);
       push(n - 1);
       for (const step of [8, 4, 2, 1]) for (let i = 0; i < n; i += step) push(i);
-      return { set, frames: Array(n).fill(null), n, order, next: 0, started: false };
+      return { set, frames: Array(n).fill(null), n, order, next: 0, started: false, bm: new Map(), pend: new Set(), center: 0 };
     };
     const caches: Record<Theme, Cache> = { dark: mkCache(SETS.dark), light: mkCache(SETS.light) };
     const fileOf = (c: Cache, i: number) => c.set.path(i === c.n - 1 ? c.set.sizes[size].count - 1 : i * stride, size);
@@ -138,6 +149,63 @@ export default function Hero() {
     let scaleMax = g.SCALE;
     let tx = 0; // móvil: desplazamiento que centra la cerrada en la pantalla (la caja va pegada a la izquierda)
     let curTx = 0;
+    let S = bx.offsetHeight; // alto de la caja (px): se lee en fit(), nunca en cada fotograma
+    let isMobile = mobile;
+    let secTop = 0; // posición de la sección y recorrido del escenario: el progreso del scroll no toca el layout
+    let range = 1;
+
+    // Pintar un <img> en el canvas puede obligar a decodificarlo otra vez (el navegador descarta lo decodificado
+    // cuando hay muchos): en móvil cada decodificación de 1080×1440 son 15-30 ms y el scroll va a tirones. Por
+    // eso se mantiene una ventana deslizante de ImageBitmap alrededor del fotograma actual, decodificados en un
+    // worker (fetch del archivo, que ya está en la caché HTTP, + createImageBitmap) para no tocar el hilo
+    // principal; el bitmap llega transferido, sin copia.
+    const WIN = size === "h" ? 4 : 6;
+    const HOLD = WIN + 3;
+    let worker: Worker | null = null;
+    try {
+      if (typeof Worker === "function" && typeof createImageBitmap === "function") {
+        const src =
+          "self.onmessage=async(e)=>{const{t,k,url}=e.data;try{const r=await fetch(url);const b=await r.blob();" +
+          "const bm=await createImageBitmap(b);self.postMessage({t,k,bm},[bm])}catch(err){self.postMessage({t,k,error:String(err)})}};";
+        worker = new Worker(URL.createObjectURL(new Blob([src], { type: "text/javascript" })));
+        worker.onmessage = (e: MessageEvent<{ t: Theme; k: number; bm?: ImageBitmap }>) => {
+          const { t, k, bm } = e.data;
+          const c = caches[t];
+          c.pend.delete(k);
+          if (!bm) return;
+          if (disposed || Math.abs(k - c.center) > HOLD) {
+            bm.close();
+            return;
+          }
+          c.bm.set(k, bm);
+        };
+        worker.onerror = () => {
+          worker?.terminate();
+          worker = null;
+        };
+      }
+    } catch {
+      worker = null;
+    }
+    const warm = (c: Cache, i: number) => {
+      if (!worker) return;
+      c.center = i;
+      for (let d = 0; d <= WIN; d++) {
+        for (const k of d ? [i - d, i + d] : [i]) {
+          if (k < 0 || k >= c.n || c.bm.has(k) || c.pend.has(k)) continue;
+          const im = c.frames[k];
+          if (!im) continue;
+          c.pend.add(k);
+          worker.postMessage({ t: c === caches.dark ? "dark" : "light", k, url: im.src });
+        }
+      }
+      for (const [k, b] of c.bm) {
+        if (Math.abs(k - i) > HOLD) {
+          b.close();
+          c.bm.delete(k);
+        }
+      }
+    };
 
     const applyGeo = () => {
       bx.style.transformOrigin = `50% ${g.CY}%`;
@@ -209,9 +277,30 @@ export default function Hero() {
       }
     };
 
+    // El canvas no necesita más píxeles que los que se ven: el tamaño de la caja × densidad de pantalla × zoom
+    // máximo de la cerrada (en un portátil 1× son 4 veces menos píxeles que el fotograma 2K por fotograma).
+    const sizeCanvas = (boxW: number) => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 3);
+      const cw = Math.min(width, Math.max(240, Math.ceil(boxW * dpr * Math.max(1, scaleMax))));
+      if (cw !== cv.width) {
+        cv.width = cw;
+        cv.height = Math.round((cw * height) / width);
+        ctx.imageSmoothingQuality = "high";
+        drawn = -1;
+      }
+    };
     const fit = () => {
+      fitBox();
+      sizeCanvas(sq.offsetWidth);
+    };
+    const fitBox = () => {
       const vw = window.innerWidth;
       sizeMobileBox(vw);
+      isMobile = vw < 640;
+      S = bx.offsetHeight;
+      const rcs = sec.getBoundingClientRect();
+      secTop = rcs.top + window.scrollY;
+      range = Math.max(1, rcs.height - st.offsetHeight);
       const sr = sq.getBoundingClientRect();
       const left0 = sr.left - curTx;
       const C = g.C;
@@ -257,13 +346,15 @@ export default function Hero() {
     const draw = () => {
       // ff: 1 = abierta, 0 = cerrada. Campana: cerrada → abierta (meseta 0,44-0,56) → cerrada.
       const ff = sm(p, 0.04, 0.44) * (1 - sm(p, 0.56, 0.96));
-      const S = bx.offsetHeight;
 
       const i = near(Math.round(ff * (cur.n - 1)));
-      if (i >= 0 && i !== drawn) {
-        drawn = i;
-        ctx.clearRect(0, 0, width, height);
-        ctx.drawImage(cur.frames[i]!, 0, 0, width, height);
+      if (i >= 0) {
+        warm(cur, i);
+        if (i !== drawn) {
+          drawn = i;
+          ctx.clearRect(0, 0, cv.width, cv.height);
+          ctx.drawImage(cur.bm.get(i) ?? cur.frames[i]!, 0, 0, cv.width, cv.height);
+        }
       }
 
       // Zoom: crece en el último tramo del cierre (cz) pero nunca más de lo que deja la altura real de la
@@ -281,17 +372,28 @@ export default function Hero() {
 
       // la sombra de contacto desaparece al despegar las capas
       if (shadow.current) shadow.current.style.opacity = String(1 - sm(ff, 0, 0.35));
-      // móvil: el sello SMASH solo con la hamburguesa cerrada (principio y final), fundido suave al abrirse
-      if (sticker.current) sticker.current.style.opacity = window.innerWidth < 640 ? String(1 - sm(ff, 0, 0.3)) : "";
+      // móvil: el sello SMASH solo con la hamburguesa cerrada (principio y final): se encoge y se funde en cuanto
+      // las capas empiezan a separarse, y vuelve a asomar al cerrarse
+      const stk = sticker.current;
+      if (stk) {
+        if (isMobile) {
+          const a = 1 - sm(ff, 0.03, 0.2);
+          stk.style.opacity = String(a);
+          stk.style.transform = `rotate(${7 + 14 * (1 - a)}deg) scale(${0.6 + 0.4 * a})`;
+        } else if (stk.style.opacity) {
+          stk.style.opacity = "";
+          stk.style.transform = "";
+        }
+      }
 
       labels.current.forEach((el, k) => {
         if (!el) return;
         const a = sm(ff, 0.7 + k * 0.04, 0.82 + k * 0.04);
-        const y = g.CY + (g.LABEL_Y[k] - g.CY) * sc + sh * 100;
-        el.style.top = `${y}%`;
+        const y = (g.CY + (g.LABEL_Y[k] - g.CY) * sc + sh * 100) / 100; // fracción del alto de la caja
         el.style.opacity = String(a);
-        // entra desde fuera (derecha): el punto se acerca a su capa hasta el margen y nunca lo cruza
-        el.style.transform = `translate(${16 * (1 - a)}px, -50%)`;
+        // solo transform (nada de top: no fuerza layout). Entra desde fuera (derecha): el punto se acerca a su
+        // capa hasta el margen y nunca lo cruza
+        el.style.transform = `translate3d(${16 * (1 - a)}px, ${y * S}px, 0) translateY(-50%)`;
       });
 
       const h = sm(p, 0.3, 0.42);
@@ -317,9 +419,10 @@ export default function Hero() {
       draw();
       raf = requestAnimationFrame(tick);
     };
+    // progreso del scroll sin tocar el layout: la posición de la sección se midió en fit()
+    const progressNow = () => clamp((window.scrollY + NAV_H - secTop) / range, 0, 1);
     const update = () => {
-      fit();
-      target = stageProgress(sec, st);
+      target = progressNow();
       if (!raf) raf = requestAnimationFrame(tick);
     };
 
@@ -366,7 +469,10 @@ export default function Hero() {
       const t = themeNow();
       if (t === theme) return;
       theme = t;
+      const prev = cur;
       cur = caches[t];
+      for (const b of prev.bm.values()) b.close(); // libera lo decodificado del tema que se deja de ver
+      prev.bm.clear();
       g = GEO[t];
       drawn = -1;
       applyGeo();
@@ -375,12 +481,41 @@ export default function Hero() {
       draw();
     });
 
-    const offScroll = rm ? (fit(), draw(), () => {}) : onScroll(update);
+    // scroll: solo el progreso (pasivo). resize: reajuste de la caja; en móvil la barra del navegador dispara
+    // resize al ocultarse, así que si solo cambia el alto el reajuste espera a que pare.
+    let lastW = window.innerWidth;
+    let resizeT = 0;
+    const refit = () => {
+      fit();
+      update();
+      draw();
+    };
+    const onResize = () => {
+      if (window.innerWidth !== lastW) {
+        lastW = window.innerWidth;
+        refit();
+        return;
+      }
+      clearTimeout(resizeT);
+      resizeT = window.setTimeout(refit, 250);
+    };
+    fit();
+    if (rm) {
+      draw();
+    } else {
+      update();
+      window.addEventListener("scroll", update, { passive: true });
+      window.addEventListener("resize", onResize);
+    }
     return () => {
       disposed = true;
       if (raf) cancelAnimationFrame(raf);
-      offScroll();
+      clearTimeout(resizeT);
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", onResize);
       offTheme();
+      worker?.terminate();
+      for (const c of Object.values(caches)) for (const b of c.bm.values()) b.close();
     };
   }, []);
 

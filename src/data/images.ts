@@ -34,10 +34,10 @@ const burgerCerrada = (alt: string): SlotImage => ({
 // tomate, cheddar sobre doble smash, salsa en el pan de abajo. Sin cebolla ni pepinillo.
 export const slots: Record<SlotId, SlotImage | null> = {
   "statement-mano-burger": {
-    src: "/images/mano-burger.webp",
+    src: "/images/mano-burger-v2.webp", // regenerada 2026-10-28 con la mano bien (pulgar debajo, dedos sobre el pan)
     alt: "Una mano sujetando la smash burger de Sixth Street, con el cheddar saliéndose por los lados",
     width: 1600,
-    height: 1703,
+    height: 1800,
     cutout: "float",
   },
   "producto-1-la-de-la-casa": burgerCerrada("La de la casa: doble smash con cheddar, lechuga, tomate y salsa Sixth"),

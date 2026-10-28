@@ -115,6 +115,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  will-change: opacity;
 }
 /* Entrada de la portada al cargar: titular, texto, botones y hamburguesa en escalera de 90 ms */
 .hero__in {
@@ -283,6 +284,7 @@
     radial-gradient(closest-side, rgb(var(--ink) / 0.4) 0%, rgb(var(--ink) / 0.14) 55%, rgb(var(--ink) / 0) 100%)
       50% center / 74% 100% no-repeat;
   pointer-events: none;
+  will-change: opacity; /* capa propia: su opacidad cambia en cada fotograma sin repintar la caja */
 }
 :root[data-theme="light"] .hero__shadow {
   --ink: 58 34 20;
@@ -332,14 +334,13 @@
   /* en móvil el sello va arriba a la derecha de la hamburguesa y solo se ve con ella cerrada: el JS le pone la
      opacidad según el scroll (1 cerrada → 0 abierta), por eso aquí solo transiciona el transform */
   .hero__square .hero__sticker-smash {
-    top: 0;
+    top: -1%;
     left: auto;
-    right: -5%;
-    width: 33%;
-    min-width: 84px;
-    transition: transform var(--dur, 0.5s) var(--ease, var(--ease-pop)) var(--delay, 0s);
-    --from: scale(0.8) rotate(18deg);
-    --to: rotate(7deg);
+    right: -7%;
+    width: 40%;
+    min-width: 100px;
+    transition: none; /* el JS lo gira, lo escala y lo funde fotograma a fotograma */
+    will-change: transform, opacity;
   }
 }
 
@@ -1168,6 +1169,13 @@
   display: block;
   width: 100%;
   height: auto;
+}
+@media (max-width: 639px) {
+  /* en móvil la foto va a casi todo el ancho (Angel: "se ve muy chica") */
+  .manifesto__open {
+    width: min(100% - 16px, 420px);
+    margin: 10px 16px 10px 0;
+  }
 }
 
 /* ===== 12 Wordmark ===== */
