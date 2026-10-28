@@ -19,6 +19,7 @@ import path from "node:path";
 import os from "node:os";
 import { execFileSync } from "node:child_process";
 import { keyFrame } from "./key.mjs";
+import { keyDark } from "./key-dark.mjs";
 
 const arg = (k, d) => {
   const i = process.argv.indexOf(`--${k}`);
@@ -38,7 +39,14 @@ if (VIDEO) {
 } else {
   SRC = path.resolve(arg("src"));
 }
-const OUT = path.resolve("public/frames");
+// --name dark: segundo juego de fotogramas (tema oscuro) en public/frames/dark y src/data/frames-dark.ts (FRAMES_DARK)
+const NAME = arg("name", "");
+// --key pink (fondo rosa, key.mjs) | dark (fondo casi negro, key-dark.mjs)
+const KEY = arg("key", "pink");
+const OUT = path.resolve(NAME ? `public/frames/${NAME}` : "public/frames");
+const MANIFEST = path.resolve(NAME ? `src/data/frames-${NAME}.ts` : "src/data/frames.ts");
+const EXPORT = NAME ? `FRAMES_${NAME.toUpperCase()}` : "FRAMES";
+const PREFIX = NAME ? `/frames/${NAME}` : "/frames";
 const IMG = path.resolve("public/images");
 const N_ARG = Number(arg("n", 0));
 const NM_ARG = Number(arg("nm", 0));
@@ -133,7 +141,10 @@ for (let i = 0; i < N; i++) {
   // holeLight 4: el brillo casi blanco del pan de arriba es un hueco cerrado apenas más claro que el fondo rosa; con el
   // valor por defecto (12) el matte lo tomaba por fondo y dejaba un agujero oscuro en la cerrada.
   // holeMin 600: los huecos pequeños (puntos de brillo) se rellenan siempre; los huecos reales entre capas son mucho mayores.
-  const k = await keyFrame(path.join(SRC, pick[i]), { shadowMax: Number(arg("shadow", 0)), holeLight: Number(arg("holeLight", 4)), holeMin: Number(arg("holeMin", 600)) });
+  const k =
+    KEY === "dark"
+      ? await keyDark(path.join(SRC, pick[i]), { lo: Number(arg("lo", 10)), hi: Number(arg("hi", 28)) })
+      : await keyFrame(path.join(SRC, pick[i]), { shadowMax: Number(arg("shadow", 0)), holeLight: Number(arg("holeLight", 4)), holeMin: Number(arg("holeMin", 600)) });
   if (i === 0) closed = k;
   if (i === N - 1) open = k;
   const base = sharp(k.data, { raw: { width: k.w, height: k.h, channels: 4 } });
@@ -188,7 +199,10 @@ const cb0 = alphaBBox(closed);
 const openBands = bands(open);
 for (const [n, p] of SPLITS) {
   const b = openBands[n - 1];
-  if (!b || p <= b[0] || p >= b[1]) throw new Error(`--split ${n}:${p} fuera de la banda ${b}`);
+  if (!b || p <= b[0] || p >= b[1]) {
+    console.log(`--split ${n}:${p}: no cae dentro de la banda ${n} (${b}); se ignora`);
+    continue;
+  }
   openBands.splice(n - 1, 1, [b[0], Math.round(p * 10) / 10], [Math.round(p * 10) / 10, b[1]]);
 }
 const closedBox = {
@@ -197,11 +211,11 @@ const closedBox = {
   x: [Math.round((cb0.minX / closed.w) * 1000) / 10, Math.round((cb0.maxX / closed.w) * 1000) / 10],
 };
 fs.writeFileSync(
-  path.resolve("src/data/frames.ts"),
+  MANIFEST,
   `// Generado por scripts/frames.mjs — no editar a mano. Porcentajes respecto al fotograma 3:4.
 export type FrameSize = "d" | "m";
 
-export const FRAMES = {
+export const ${EXPORT} = {
   sizes: {
     d: { width: ${SIZES.d.w}, height: ${SIZES.d.h}, count: ${N} },
     m: { width: ${SIZES.m.w}, height: ${SIZES.m.h}, count: ${NM} },
@@ -210,7 +224,7 @@ export const FRAMES = {
   closed: ${JSON.stringify(closedBox)},
   /** bandas verticales de píxeles opacos del fotograma abierto (último), % del alto */
   openBands: ${JSON.stringify(openBands)} as [number, number][],
-  path: (i: number, size: FrameSize) => \`/frames/\${size}/frame_\${String(i).padStart(3, "0")}.webp\`,
+  path: (i: number, size: FrameSize) => \`${PREFIX}/\${size}/frame_\${String(i).padStart(3, "0")}.webp\`,
 };
 `,
 );

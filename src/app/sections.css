@@ -328,8 +328,12 @@
   inset: 0;
   background: var(--red); /* un solo tono, como las letras del logo: el neón es solo el halo */
 }
+/* tema claro: amarillas y planas, como el logo claro (sin neón) */
 :root[data-theme="light"] .hero__sparkle {
-  filter: drop-shadow(0 0 calc(var(--s) * 0.15) rgba(255, 46, 59, 0.7)) drop-shadow(0 0 calc(var(--s) * 0.5) rgba(255, 46, 59, 0.35));
+  filter: none;
+}
+:root[data-theme="light"] .hero__star {
+  background: var(--cheese);
 }
 @media (max-width: 639px) {
   /* en móvil la hamburguesa va sola: el sello taparía el texto o el pan */
