@@ -21,11 +21,6 @@ export default function Footer() {
       </div>
       <div className="footer__brand">
         <WelcomeBadge className="footer__badge" id="rombo-footer" reveal />
-        <p className="footer__wordmark">
-          SIXTH STREET
-          <br />
-          BURGERS
-        </p>
       </div>
       <div className="footer__grid mono">
         <div>

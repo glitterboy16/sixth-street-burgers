@@ -1345,27 +1345,9 @@
 }
 .footer__badge {
   flex: none;
-  width: clamp(210px, 24vw, 320px);
+  width: clamp(280px, 36vw, 480px); /* sin rótulo al lado: el rombo es la marca del pie */
   --from: scale(0.8) rotate(-20deg);
   --to: rotate(-5deg);
-}
-.footer__wordmark {
-  flex: 1 1 320px;
-  min-width: 0;
-  margin: 0;
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: clamp(48px, 9.5vw, 150px);
-  line-height: 0.9;
-  letter-spacing: 0.01em;
-  text-transform: uppercase;
-  color: transparent;
-  background-color: var(--bulb);
-  background-image: radial-gradient(circle, var(--bulb-cream) 0 1.7px, transparent 2.3px);
-  background-size: 12px 12px;
-  -webkit-background-clip: text;
-  background-clip: text;
-  filter: drop-shadow(0 0 16px rgba(255, 150, 40, 0.45));
 }
 .footer__grid {
   display: grid;
