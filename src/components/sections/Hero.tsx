@@ -417,14 +417,15 @@ export default function Hero() {
       const dt = last ? Math.min(64, now - last) : 16;
       last = now;
       const d = target - p;
-      if (Math.abs(d) < 0.0004) {
+      if (Math.abs(d) < 0.0002) {
         p = target;
         last = 0;
         draw();
         return;
       }
-      // móvil: algo más de inercia para que la apertura se deslice como un vídeo en vez de ir a saltos con el dedo
-      p += d * (1 - Math.exp(-dt / (isMobile ? 120 : 70)));
+      // "scrub" suavizado tipo GSAP: la animación persigue al scroll con retardo y se desliza hasta pararse
+      // (constante de tiempo 260 ms en móvil, 160 ms en escritorio) en vez de ir pegada a cada salto del dedo
+      p += d * (1 - Math.exp(-dt / (isMobile ? 260 : 160)));
       draw();
       raf = requestAnimationFrame(tick);
     };
