@@ -154,6 +154,8 @@
   flex-wrap: wrap;
   align-items: center;
   gap: clamp(16px, 3vw, 48px);
+  row-gap: clamp(18px, 3vh, 32px);
+  align-content: center; /* las filas (texto y botones) van juntas en el centro, no repartidas */
   padding: 56px var(--gutter);
 }
 .hero__copy {
@@ -184,7 +186,13 @@
   color: var(--red);
   transform: translateY(110%);
 }
+/* Fila propia del grid (fuera de la columna de texto): en escritorio queda bajo el párrafo; en móvil y tablet,
+   bajo la hamburguesa. Siempre por encima de ella. */
 .hero__actions {
+  position: relative;
+  z-index: 9;
+  flex: 0 0 100%;
+  min-width: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
@@ -228,6 +236,9 @@
      la cerrada se amplía por JS hasta casi todo el ancho y se centra: plano completo. */
   .hero__grid {
     --box: clamp(200px, min(100svh - 440px, (100vw - 172px) / 0.82 * 1.3333), 400px);
+    /* texto arriba, hamburguesa en medio, botones al pie: menos relleno vertical para que la caja crezca */
+    padding: 44px var(--gutter) 48px;
+    row-gap: 14px;
   }
   .hero__square {
     will-change: transform;

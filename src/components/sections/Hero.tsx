@@ -181,7 +181,8 @@ export default function Hero() {
       }
       const cs = getComputedStyle(grid);
       const gap = parseFloat(cs.rowGap) || 16;
-      const avail = st.clientHeight - cp.offsetHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - gap;
+      const btns = actions.current ? actions.current.offsetHeight + gap : 0; // los botones van debajo de la caja
+      const avail = st.clientHeight - cp.offsetHeight - btns - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - gap;
       const byWidth = ((vw - 172) / 0.82) * (4 / 3);
       const h = Math.round(Math.max(180, Math.min(avail, byWidth, 400)));
       if (h !== boxH) {
@@ -370,14 +371,6 @@ export default function Hero() {
             <p ref={lead} className="lead hero__in" style={{ "--i": 1 } as React.CSSProperties}>
               Smash burgers a la plancha. Un diner americano de noche, en Lanzarote.
             </p>
-            <div ref={actions} className="hero__actions hero__in" style={{ "--i": 2 } as React.CSSProperties}>
-              <a href="#carta" className="btn btn--primary">
-                Ver la carta
-              </a>
-              <a href="#local" className="btn btn--outline">
-                Cómo llegar
-              </a>
-            </div>
           </div>
 
           <div className="hero__scene hero__in" style={{ "--i": 1 } as React.CSSProperties}>
@@ -422,6 +415,18 @@ export default function Hero() {
                 />
               </div>
             </div>
+          </div>
+
+          {/* Los botones van fuera de la columna de texto: en escritorio quedan debajo del párrafo, igual que
+              antes; en móvil y tablet pasan DEBAJO de la hamburguesa, al pie del escenario, para que la
+              hamburguesa tenga todo el hueco y nunca los pise. */}
+          <div ref={actions} className="hero__actions hero__in" style={{ "--i": 2 } as React.CSSProperties}>
+            <a href="#carta" className="btn btn--primary">
+              Ver la carta
+            </a>
+            <a href="#local" className="btn btn--outline">
+              Cómo llegar
+            </a>
           </div>
         </div>
       </div>
