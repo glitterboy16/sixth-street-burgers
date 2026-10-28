@@ -1079,6 +1079,30 @@
   height: 30px;
   background: var(--cheese);
 }
+@media (max-width: 639px) {
+  /* móvil: la sección se ajusta al contenido (sin huecos) y el titular y la estrella van grandes */
+  .grab {
+    min-height: 0;
+  }
+  .grab__row {
+    gap: 22px;
+  }
+  .grab h2 {
+    flex-basis: 100%;
+    font-size: clamp(72px, 19vw, 96px);
+  }
+  .grab__art {
+    flex-basis: 100%;
+    justify-content: flex-end;
+  }
+  .grab__square {
+    width: min(100%, 88vw);
+  }
+  .grab__sparkle {
+    width: 38px;
+    height: 38px;
+  }
+}
 
 /* ===== 11 Manifiesto ===== */
 .manifesto {
