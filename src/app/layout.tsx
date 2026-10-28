@@ -23,7 +23,17 @@ export const metadata: Metadata = {
   openGraph: {
     title: site.name,
     description: site.description,
-    images: [{ url: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/images/og.jpg`, width: 1200, height: 630 }],
+    siteName: site.name,
+    // vista previa al compartir el enlace (WhatsApp, Instagram…): si cambia, cambia también el nombre del archivo
+    // para que las apps no sigan mostrando la versión que tienen en caché
+    images: [
+      {
+        url: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/images/og-v2.jpg`,
+        width: 1200,
+        height: 630,
+        alt: "Sixth Street Burger Club: Muerde fuerte. Smash burger doble con cheddar, lechuga y tomate.",
+      },
+    ],
     locale: "es_ES",
     type: "website",
   },
