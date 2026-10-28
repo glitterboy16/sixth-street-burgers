@@ -95,7 +95,10 @@ export default function Hero() {
     // de baja densidad.
     const mobile = window.innerWidth < 640;
     const size: FrameSize = !mobile ? "h" : window.devicePixelRatio < 2 ? "m" : "d";
-    const stride = size === "d" ? 2 : 1;
+    // Todos los fotogramas también en móvil: con uno de cada dos la hamburguesa avanzaba a escalones (la imagen
+    // cambiaba cada 2-3 refrescos mientras el zoom se movía en cada uno). La carga es progresiva (orden de
+    // saltos 8 → 4 → 2 → 1), así que primero llegan los pares y la animación ya funciona mientras baja el resto.
+    const stride = 1;
     const { width, height } = FRAMES.sizes[size]; // los dos juegos salen del mismo script: mismo tamaño
     cv.width = width;
     cv.height = height;
@@ -165,8 +168,8 @@ export default function Hero() {
     try {
       if (typeof Worker === "function" && typeof createImageBitmap === "function") {
         const src =
-          "self.onmessage=async(e)=>{const{t,k,url}=e.data;try{const r=await fetch(url);const b=await r.blob();" +
-          "const bm=await createImageBitmap(b);self.postMessage({t,k,bm},[bm])}catch(err){self.postMessage({t,k,error:String(err)})}};";
+          "self.onmessage=async(e)=>{const{t,k,url,w,h}=e.data;try{const r=await fetch(url);const b=await r.blob();" +
+          "const bm=await createImageBitmap(b,{resizeWidth:w,resizeHeight:h,resizeQuality:\"high\"});self.postMessage({t,k,bm},[bm])}catch(err){self.postMessage({t,k,error:String(err)})}};";
         worker = new Worker(URL.createObjectURL(new Blob([src], { type: "text/javascript" })));
         worker.onmessage = (e: MessageEvent<{ t: Theme; k: number; bm?: ImageBitmap }>) => {
           const { t, k, bm } = e.data;
@@ -196,7 +199,7 @@ export default function Hero() {
           const im = c.frames[k];
           if (!im) continue;
           c.pend.add(k);
-          worker.postMessage({ t: c === caches.dark ? "dark" : "light", k, url: im.src });
+          worker.postMessage({ t: c === caches.dark ? "dark" : "light", k, url: im.src, w: cv.width, h: cv.height });
         }
       }
       for (const [k, b] of c.bm) {
@@ -287,6 +290,11 @@ export default function Hero() {
         cv.height = Math.round((cw * height) / width);
         ctx.imageSmoothingQuality = "high";
         drawn = -1;
+        // los bitmaps ya decodificados son del tamaño anterior: se rehacen al nuevo
+        for (const c of Object.values(caches)) {
+          for (const b of c.bm.values()) b.close();
+          c.bm.clear();
+        }
       }
     };
     const fit = () => {
@@ -415,7 +423,8 @@ export default function Hero() {
         draw();
         return;
       }
-      p += d * (1 - Math.exp(-dt / 70));
+      // móvil: algo más de inercia para que la apertura se deslice como un vídeo en vez de ir a saltos con el dedo
+      p += d * (1 - Math.exp(-dt / (isMobile ? 120 : 70)));
       draw();
       raf = requestAnimationFrame(tick);
     };

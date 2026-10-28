@@ -948,7 +948,7 @@
   position: relative;
   overflow: clip;
   background: var(--teal);
-  padding: clamp(32px, 5vh, 56px) 0;
+  padding: 0 0 clamp(32px, 5vh, 56px); /* la foto pega arriba: sin franja verde encima */
   --corner: var(--paper);
 }
 /* La foto del local se ve siempre entera (Angel, 2026-10-28): la caja tiene la proporción de la foto (4:3). */
