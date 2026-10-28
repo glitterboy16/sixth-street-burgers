@@ -226,10 +226,10 @@
   }
   /* la columna de etiquetas mide ~160 px: letra más pequeña y hasta dos líneas */
   .hero__label .callout__text {
-    max-width: 128px;
-    font-size: 10px;
-    letter-spacing: 0.06em;
-    line-height: 1.15;
+    max-width: 140px;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    line-height: 1.2;
   }
 }
 @media (max-width: 639px) {
@@ -247,7 +247,7 @@
   }
   /* las etiquetas caben a la derecha del fotograma sin salirse de la pantalla */
   .hero__label .callout__text {
-    max-width: 112px;
+    max-width: 128px;
   }
 }
 .hero__square {
@@ -297,6 +297,11 @@
   height: 100%;
   z-index: 7;
   pointer-events: none;
+}
+@media (min-width: 900px) {
+  .hero__label .callout__text {
+    font-size: 14px;
+  }
 }
 .hero__label {
   position: absolute;
