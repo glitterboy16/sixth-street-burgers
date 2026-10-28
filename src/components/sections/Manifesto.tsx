@@ -1,6 +1,5 @@
 import Corner from "@/components/kit/Corner";
 import Line from "@/components/kit/Line";
-import WelcomeBadge from "@/components/kit/WelcomeBadge";
 import ImageSlot from "@/components/kit/ImageSlot";
 
 export default function Manifesto() {
@@ -29,7 +28,6 @@ export default function Manifesto() {
           </h2>
           <div className="manifesto__row">
             <p className="mono">Abrimos cada día. Terraza y salón. Para llevar.</p>
-            <WelcomeBadge className="manifesto__badge" id="rombo-manifesto" />
           </div>
         </div>
       </div>
