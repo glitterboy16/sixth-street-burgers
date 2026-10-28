@@ -9,6 +9,7 @@ export type SlotId =
   | "producto-2-la-picante"
   | "producto-3-la-doble"
   | "que-lleva-render-abierta"
+  | "que-lleva-render-abierta-oscuro"
   | "patatas-cucurucho"
   | "coge-la-tuya-burger"
   | "manifiesto-burger";
@@ -54,11 +55,20 @@ export const slots: Record<SlotId, SlotImage | null> = {
     height: 1510,
     cutout: "contact",
   },
+  // Último fotograma del vídeo del hero (lechuga sobre tomate), uno por tema: el recorte del fondo rosa deja
+  // halo sobre negro, así que en oscuro va el fotograma generado sobre negro.
   "que-lleva-render-abierta": {
-    src: "/images/burger-abierta-v2.webp",
+    src: "/images/burger-abierta-v3.webp",
     alt: "La hamburguesa abierta por capas: pan brioche, lechuga y tomate, cheddar, doble smash, pan con salsa",
     width: 1200,
-    height: 1607,
+    height: 1856,
+    cutout: "float",
+  },
+  "que-lleva-render-abierta-oscuro": {
+    src: "/images/burger-abierta-v3-oscuro.webp",
+    alt: "La hamburguesa abierta por capas: pan brioche, lechuga y tomate, cheddar, doble smash, pan con salsa",
+    width: 1200,
+    height: 1858,
     cutout: "float",
   },
   "patatas-cucurucho": {
@@ -78,6 +88,7 @@ export const placeholders: Record<SlotId, string> = {
   "producto-2-la-picante": "La picante · foto estudio",
   "producto-3-la-doble": "La doble · foto estudio",
   "que-lleva-render-abierta": "Render hamburguesa abierta · capas flotando",
+  "que-lleva-render-abierta-oscuro": "Render hamburguesa abierta · capas flotando (tema oscuro)",
   "patatas-cucurucho": "Patatas en cucurucho a cuadros rojo/crema + bote de salsa (PNG sin fondo)",
   "coge-la-tuya-burger": "Hamburguesa cerrada · misma foto del hero",
   "manifiesto-burger": "Hamburguesa · misma foto del hero",

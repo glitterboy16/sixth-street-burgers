@@ -66,7 +66,7 @@ export const products: Product[] = [
 
 export const ingredients: [string, string][] = [
   ["Brioche", "Tostado en mantequilla"],
-  ["Tomate y lechuga", "Frescos, cortados al día"],
+  ["Lechuga y tomate", "Frescos, cortados al día"],
   ["Cheddar", "Fundido en plancha"],
   ["Smash", "Ternera 150 g, borde crujiente"],
   ["Salsa Sixth", "Receta de la casa"],

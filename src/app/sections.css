@@ -704,7 +704,12 @@
   position: relative;
   flex: none;
   width: min(54%, 50vmin);
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 1200 / 1856; /* proporción del still abierto v3 */
+}
+/* una imagen por tema: la del otro tema no se muestra */
+:root[data-theme="dark"] .inside__still--light,
+:root[data-theme="light"] .inside__still--dark {
+  display: none;
 }
 .inside__img .sparkle {
   left: -6%;
@@ -952,18 +957,24 @@
   padding: clamp(32px, 5vh, 56px) 0;
   --corner: var(--paper);
 }
+/* La foto del local se ve siempre entera (Angel, 2026-10-28): la caja tiene la proporción de la foto (4:3). */
 .collage__photo {
   position: relative;
-  height: min(82vh, 900px);
+  width: 100%;
+}
+.collage__frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2048 / 1536;
   overflow: clip;
 }
-.collage__photo img {
+.collage__frame img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: 50% 40%;
+  object-fit: contain;
+  object-position: 50% 50%;
 }
 .collage h2 {
   position: absolute;
@@ -980,6 +991,18 @@
 }
 .collage h2 .line:nth-child(3) {
   padding-left: clamp(0px, 16vw, 320px);
+}
+@media (max-width: 639px) {
+  /* en móvil la foto es baja: el titular va debajo, no encima */
+  .collage h2 {
+    position: static;
+    margin: 20px var(--gutter) 0;
+    font-size: clamp(36px, 11vw, 48px);
+  }
+  /* las dos esquinas superiores de "Coge la tuya" se pisaban */
+  .grab .corner--tr {
+    display: none;
+  }
 }
 
 /* ===== 10 Coge la tuya ===== */

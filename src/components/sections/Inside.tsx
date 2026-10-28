@@ -20,7 +20,8 @@ export default function Inside() {
         </div>
         <div className="inside__art">
           <div className="inside__img">
-            <ImageSlot id="que-lleva-render-abierta" sizes="(max-width: 640px) 60vw, 30vw" />
+            <ImageSlot id="que-lleva-render-abierta" sizes="(max-width: 640px) 60vw, 30vw" className="inside__still inside__still--light" />
+            <ImageSlot id="que-lleva-render-abierta-oscuro" sizes="(max-width: 640px) 60vw, 30vw" className="inside__still inside__still--dark" />
             <div className="sparkle" aria-hidden="true" />
           </div>
           <ul className="inside__list">
