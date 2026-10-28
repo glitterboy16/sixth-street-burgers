@@ -34,6 +34,7 @@ export const viewport: Viewport = {
 };
 
 // Aplica el tema guardado antes del primer pintado para evitar el parpadeo.
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const themeScript = `(function(){try{var t=localStorage.getItem("ssb-theme");if(t==="light"||t==="dark"){document.documentElement.dataset.theme=t}}catch(e){}})();`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -46,6 +47,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        {/* primer fotograma del hero (LCP): el canvas lo pinta en cuanto llega */}
+        <link rel="preload" as="image" href={`${BASE}/frames/d/frame_000.webp`} media="(min-width: 640px)" />
+        <link rel="preload" as="image" href={`${BASE}/frames/m/frame_000.webp`} media="(max-width: 639px)" />
       </head>
       <body>{children}</body>
     </html>

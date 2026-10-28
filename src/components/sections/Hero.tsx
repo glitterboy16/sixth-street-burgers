@@ -2,55 +2,65 @@
 
 import { useEffect, useRef } from "react";
 import Image from "next/image";
-import { HERO } from "@/data/hero";
+import { FRAMES, type FrameSize } from "@/data/frames";
 import { heroLabels, site } from "@/data/site";
 import { onScroll, prefersReducedMotion, sm, stageProgress } from "@/lib/motion";
 import WelcomeBadge from "@/components/kit/WelcomeBadge";
 import Corner from "@/components/kit/Corner";
 import TodayHours from "@/components/kit/TodayHours";
 
-// La hamburguesa son cinco capas recortadas del render del despiece (scripts/hero-layers.mjs). Abierta,
-// cada capa está donde la pintó el render; cerrada, cada capa baja hasta apoyar sobre la inferior.
-// SEAT[i] = fracción del alto de la capa i+1 que la capa i tapa al apoyarse (misma lista que el script).
-const SEAT = [0.6, 0.6, 0.55, 0.42];
-// Escala máxima de la caja con la hamburguesa cerrada: ocupa casi todo el escenario.
-const MAX_SCALE = 1.7;
+// La hamburguesa es un vídeo generado (cerrada → despiece) troceado en fotogramas WebP con alfa por
+// scripts/frames.mjs. El scroll elige el fotograma (0 = cerrada, N-1 = abierta) y lo pinta en un canvas,
+// sin fundidos entre vecinos (emborronan las capas en movimiento).
+const MAX_SCALE = 1.7; // escala de la caja con la hamburguesa cerrada: ocupa casi todo el escenario
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
-const L = HERO.layers;
-const N = L.length;
-
-// Bordes superiores de las bandas apiladas (cerrada), % del alto del fotograma. El pan de abajo no se mueve.
-const TOPS: number[] = Array(N).fill(0);
-TOPS[N - 1] = L[N - 1].band[0];
-for (let i = N - 2; i >= 0; i--) {
-  const hb = L[i + 1].band[1] - L[i + 1].band[0];
-  const bottom = TOPS[i + 1] + (SEAT[i] ?? 0.5) * hb;
-  TOPS[i] = bottom - (L[i].band[1] - L[i].band[0]);
-}
-const CLOSED_TOP = TOPS[0];
-const CLOSED_BOTTOM = TOPS[N - 1] + (L[N - 1].band[1] - L[N - 1].band[0]);
-const CY = (CLOSED_TOP + CLOSED_BOTTOM) / 2; // centro de la cerrada: origen del zoom
-const SCALE = Math.min(MAX_SCALE, 95 / (CLOSED_BOTTOM - CLOSED_TOP));
+const C = FRAMES.closed;
+const CY = (C.top + C.bottom) / 2; // centro de la cerrada: origen del zoom
+const SCALE = Math.min(MAX_SCALE, 95 / (C.bottom - C.top));
 const LIFT = (50 - CY) / 100; // desplazamiento (fracción del alto de la caja) que centra la cerrada
-const SHADOW_X = (L[N - 1].x[0] + L[N - 1].x[1]) / 2;
-const SHADOW_W = (L[N - 1].x[1] - L[N - 1].x[0]) * 1.12;
+const SHADOW_X = (C.x[0] + C.x[1]) / 2;
+const SHADOW_W = (C.x[1] - C.x[0]) * 1.12;
+
+// Centro de cada etiqueta en el fotograma abierto (% del alto): las bandas que midió el script. Si el matte
+// no separa exactamente una banda por capa, se reparten entre la primera y la última.
+const LABEL_Y: number[] = (() => {
+  const b = FRAMES.openBands;
+  const n = heroLabels.length;
+  if (b.length === n) return b.map(([a, z]) => (a + z) / 2);
+  const top = b.length ? (b[0][0] + b[0][1]) / 2 : 20;
+  const bottom = b.length ? (b[b.length - 1][0] + b[b.length - 1][1]) / 2 : 85;
+  return Array.from({ length: n }, (_, i) => top + ((bottom - top) * i) / (n - 1));
+})();
 
 export default function Hero() {
   const section = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const box = useRef<HTMLDivElement>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
   const shadow = useRef<HTMLDivElement>(null);
   const titleA = useRef<HTMLHeadingElement>(null);
   const titleB = useRef<HTMLParagraphElement>(null);
   const cue = useRef<HTMLParagraphElement>(null);
-  const layers = useRef<(HTMLDivElement | null)[]>([]);
   const labels = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
     const sec = section.current,
       st = stage.current,
-      bx = box.current;
-    if (!sec || !st || !bx) return;
+      bx = box.current,
+      cv = canvas.current;
+    if (!sec || !st || !bx || !cv) return;
+    const ctx = cv.getContext("2d");
+    if (!ctx) return;
+
+    // móvil (< 640 px) carga la versión ligera
+    const size: FrameSize = window.innerWidth < 640 ? "m" : "d";
+    const { width, height, count: n } = FRAMES.sizes[size];
+    cv.width = width;
+    cv.height = height;
+    const frames: (HTMLImageElement | null)[] = Array(n).fill(null);
+    let drawn = -1;
+    let disposed = false;
 
     const rm = prefersReducedMotion();
     // p = progreso del scroll suavizado (0 arriba, 1 al final). Arriba la hamburguesa está cerrada, grande y
@@ -60,18 +70,27 @@ export default function Hero() {
     let raf = 0;
     let last = 0;
 
+    // fotograma cargado más cercano a i (mientras se descargan)
+    const near = (i: number) => {
+      for (let d = 0; d < n; d++) {
+        if (frames[i - d]) return i - d;
+        if (frames[i + d]) return i + d;
+      }
+      return -1;
+    };
+
     const draw = () => {
       // ff: 1 = abierta, 0 = cerrada. Campana: cerrada → abierta (meseta 0,44-0,56) → cerrada.
       const ff = sm(p, 0.04, 0.44) * (1 - sm(p, 0.56, 0.96));
       const cl = 1 - ff;
       const S = bx.offsetHeight;
 
-      // capas: de su sitio abierto a su sitio apilado
-      layers.current.forEach((el, i) => {
-        if (!el) return;
-        const dy = ((TOPS[i] - L[i].band[0]) / 100) * S * cl;
-        el.style.transform = `translateY(${dy}px)`;
-      });
+      const i = near(Math.round(ff * (n - 1)));
+      if (i >= 0 && i !== drawn) {
+        drawn = i;
+        ctx.clearRect(0, 0, width, height);
+        ctx.drawImage(frames[i]!, 0, 0, width, height);
+      }
 
       // zoom y subida de la caja solo en el último tramo del cierre, cuando las capas ya casi se tocan
       const cz = sm(cl, 0.45, 1);
@@ -83,11 +102,10 @@ export default function Hero() {
 
       if (shadow.current) shadow.current.style.opacity = String(1 - sm(ff, 0, 0.35));
 
-      labels.current.forEach((el, i) => {
-        if (!el || !L[i]) return;
-        const a = sm(ff, 0.7 + i * 0.04, 0.82 + i * 0.04);
-        const c = (L[i].band[0] + L[i].band[1]) / 2;
-        const y = CY + (c - CY) * sc + sh * 100;
+      labels.current.forEach((el, k) => {
+        if (!el) return;
+        const a = sm(ff, 0.7 + k * 0.04, 0.82 + k * 0.04);
+        const y = CY + (LABEL_Y[k] - CY) * sc + sh * 100;
         el.style.top = `${y}%`;
         el.style.opacity = String(a);
         el.style.transform = `translate(${-16 * (1 - a)}px, -50%)`;
@@ -121,8 +139,43 @@ export default function Hero() {
       if (!raf) raf = requestAnimationFrame(tick);
     };
 
+    // Carga: la cerrada y la abierta primero, luego a saltos cada vez más finos. 6 descargas en paralelo.
+    const order: number[] = [];
+    const seen = new Set<number>();
+    const push = (i: number) => {
+      if (i >= 0 && i < n && !seen.has(i)) {
+        seen.add(i);
+        order.push(i);
+      }
+    };
+    push(0);
+    push(n - 1);
+    for (const step of [8, 4, 2, 1]) for (let i = 0; i < n; i += step) push(i);
+
+    let next = 0;
+    const pump = () => {
+      if (disposed || next >= order.length) return;
+      const i = order[next++];
+      const im = new window.Image();
+      im.decoding = "async";
+      im.src = BASE + FRAMES.path(i, size);
+      im.decode().then(
+        () => {
+          if (!disposed) {
+            frames[i] = im;
+            drawn = -1;
+            draw();
+          }
+          pump();
+        },
+        () => pump(),
+      );
+    };
+    for (let k = 0; k < 6; k++) pump();
+
     const offScroll = rm ? (draw(), () => {}) : onScroll(update);
     return () => {
+      disposed = true;
       if (raf) cancelAnimationFrame(raf);
       offScroll();
     };
@@ -174,33 +227,14 @@ export default function Hero() {
                   ref={shadow}
                   className="hero__shadow"
                   aria-hidden="true"
-                  style={{ left: `${SHADOW_X}%`, top: `${CLOSED_BOTTOM - 0.8}%`, width: `${SHADOW_W}%` }}
+                  style={{ left: `${SHADOW_X}%`, top: `${C.bottom - 0.8}%`, width: `${SHADOW_W}%` }}
                 />
-                <div
-                  className="hero__stack"
+                <canvas
+                  ref={canvas}
+                  className="hero__canvas"
                   role="img"
                   aria-label="La smash burger de Sixth Street abriéndose por capas y volviéndose a montar al hacer scroll"
-                >
-                  {L.map((l, i) => (
-                    <div
-                      key={l.file}
-                      ref={(el) => {
-                        layers.current[i] = el;
-                      }}
-                      className="hero__layer"
-                      style={{ top: `${l.top}%`, zIndex: N - i }}
-                    >
-                      <Image
-                        src={HERO.path(l.file)}
-                        alt=""
-                        width={l.width}
-                        height={l.height}
-                        sizes="(max-width: 639px) 80vw, 46vw"
-                        priority
-                      />
-                    </div>
-                  ))}
-                </div>
+                />
               </div>
 
               {heroLabels.map((t, i) => (
