@@ -42,3 +42,6 @@ next-env.d.ts
 
 # previsualización del script de capas
 /scripts/.hero-preview.png
+
+.vercel
+.env*
