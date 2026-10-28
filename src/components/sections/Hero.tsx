@@ -287,7 +287,8 @@ export default function Hero() {
         const y = g.CY + (g.LABEL_Y[k] - g.CY) * sc + sh * 100;
         el.style.top = `${y}%`;
         el.style.opacity = String(a);
-        el.style.transform = `translate(${-16 * (1 - a)}px, -50%)`;
+        // entra desde fuera (derecha): el punto se acerca a su capa hasta el margen y nunca lo cruza
+        el.style.transform = `translate(${16 * (1 - a)}px, -50%)`;
       });
 
       const h = sm(p, 0.3, 0.42);
