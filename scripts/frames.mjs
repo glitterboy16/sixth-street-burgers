@@ -3,7 +3,7 @@
 //   node scripts/frames.mjs [--video ../hd.mp4] [--src carpeta-de-jpg-o-png] [--n 0] [--nm 0]
 //
 // - La web no funde fotogramas vecinos (emborrona las capas en movimiento): se exportan TODOS los únicos
-//   del vídeo en escritorio (--n 0 = todos, 145) y la mitad en móvil (--nm 0 = ⌈n/2⌉).
+//   del vídeo en escritorio (--n 0 = todos) y en móvil la mitad (--nm 0 = ⌈n/2⌉) o todos (--nm all).
 // - Fuente por defecto: ../hd.mp4 (1080×1440, 145 fotogramas), extraído a PNG sin pérdida con ffmpeg.
 //   Con --src se usa una carpeta de JPG/PNG (p. ej. los ezgif del handoff, de peor calidad).
 // - Quita los fotogramas duplicados consecutivos (ezgif repite uno de cada cinco).
@@ -29,7 +29,7 @@ const VIDEO = process.argv.includes("--src") ? null : path.resolve(arg("video", 
 let SRC;
 if (VIDEO) {
   if (!fs.existsSync(VIDEO)) throw new Error(`no existe ${VIDEO} (pásalo con --video o usa --src)`);
-  SRC = path.join(os.tmpdir(), "ssb-hero-frames");
+  SRC = path.join(os.tmpdir(), "ssb-hero-frames-" + (arg("name", "") || "light")); // una carpeta por juego: los dos temas se pueden exportar a la vez
   fs.rmSync(SRC, { recursive: true, force: true });
   fs.mkdirSync(SRC, { recursive: true });
   console.log(`extrayendo ${VIDEO} → ${SRC}`);
@@ -48,6 +48,8 @@ const MANIFEST = path.resolve(NAME ? `src/data/frames-${NAME}.ts` : "src/data/fr
 const EXPORT = NAME ? `FRAMES_${NAME.toUpperCase()}` : "FRAMES";
 const PREFIX = NAME ? `/frames/${NAME}` : "/frames";
 const IMG = path.resolve("public/images");
+// Sello de cache: cambia en cada exportacion para que el navegador y la CDN no reutilicen fotogramas viejos con el mismo nombre
+const STAMP = Date.now().toString(36);
 const N_ARG = Number(arg("n", 0));
 const NM_ARG = Number(arg("nm", 0));
 // --reverse 0: el clip ya va de cerrada a abierta (vídeo generado con frame inicial y final)
@@ -97,7 +99,7 @@ console.log(`${files.length} fotogramas, ${uniq.length} únicos`);
 // 2) invertir: índice 0 = cerrada
 const ordered = REVERSE ? uniq.slice().reverse() : uniq.slice();
 const N = N_ARG || ordered.length;
-const NM = NM_ARG || Math.ceil(N / 2);
+const NM = arg("nm", "0") === "all" ? N : NM_ARG || Math.ceil(N / 2);
 const pick = Array.from({ length: N }, (_, i) => ordered[Math.round((i * (ordered.length - 1)) / (N - 1))]);
 // índice de escritorio de cada fotograma de móvil (submuestreo uniforme)
 const mobileOf = new Map(Array.from({ length: NM }, (_, j) => [Math.round((j * (N - 1)) / (NM - 1)), j]));
@@ -251,7 +253,7 @@ export const ${EXPORT} = {
   /** bordes izquierdo y derecho de píxeles opacos de cada banda abierta, % del ancho (misma lista que openBands) */
   openLeft: ${JSON.stringify(openLeft)},
   openRight: ${JSON.stringify(openRight)},
-  path: (i: number, size: FrameSize) => \`${PREFIX}/\${size}/frame_\${String(i).padStart(3, "0")}.webp\`,
+  path: (i: number, size: FrameSize) => \`${PREFIX}/\${size}/frame_\${String(i).padStart(3, "0")}.webp?v=${STAMP}\`,
 };
 `,
 );
