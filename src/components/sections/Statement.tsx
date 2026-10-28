@@ -1,7 +1,6 @@
 import Corner from "@/components/kit/Corner";
 import Line from "@/components/kit/Line";
 import Arrow from "@/components/kit/Arrow";
-import Smiley from "@/components/kit/Smiley";
 import Checker from "@/components/kit/Checker";
 import ImageSlot from "@/components/kit/ImageSlot";
 
@@ -30,7 +29,6 @@ export default function Statement() {
             <div className="statement__photo">
               <ImageSlot id="statement-mano-burger" sizes="(max-width: 640px) 80vw, 60vmin" />
             </div>
-            <Smiley className="statement__smiley" reveal />
             <div className="sparkle pop statement__sparkle" data-reveal="1" aria-hidden="true" />
           </div>
         </div>

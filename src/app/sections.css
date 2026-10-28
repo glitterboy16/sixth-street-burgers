@@ -438,14 +438,6 @@
   position: absolute;
   inset: -2%;
 }
-.statement__smiley {
-  left: -4%;
-  bottom: 8%;
-  width: clamp(48px, 8vmin, 64px);
-  --from: scale(0.6);
-  --to: rotate(-8deg);
-  --delay: 0.2s;
-}
 .statement__sparkle {
   right: -2%;
   top: 4%;
@@ -1221,14 +1213,6 @@
 .wordmark__mid {
   position: relative;
   height: 0;
-}
-.wordmark__smiley {
-  left: 50%;
-  top: -14px;
-  width: 56px;
-  margin-left: -28px;
-  z-index: 2;
-  transform: rotate(10deg);
 }
 
 /* ===== 13 CTA ===== */

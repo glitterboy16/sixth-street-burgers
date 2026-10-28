@@ -248,42 +248,6 @@ svg {
   background: conic-gradient(var(--red) 0 25%, transparent 0 50%, var(--red) 0 75%, transparent 0) 0 0 /
     16px 16px;
 }
-.smiley {
-  position: absolute;
-  aspect-ratio: 1;
-  border-radius: 999px;
-  background: var(--cheese);
-  border: 2px solid var(--ink);
-}
-.smiley i {
-  position: absolute;
-  top: 32%;
-  width: 12%;
-  height: 12%;
-  border-radius: 999px;
-  background: var(--ink);
-}
-.smiley i:first-child {
-  left: 30%;
-}
-.smiley i:nth-child(2) {
-  right: 30%;
-}
-.smiley b {
-  position: absolute;
-  left: 28%;
-  right: 28%;
-  bottom: 22%;
-  height: 22%;
-  border: 2px solid var(--ink);
-  border-top: 0;
-  border-radius: 0 0 999px 999px;
-}
-@media (hover: hover) and (pointer: fine) {
-  .smiley:hover {
-    animation: wiggle 0.4s ease-in-out;
-  }
-}
 
 /* Rombo del cartel (WelcomeBadge): neón en el tema oscuro, sello de tinta en el claro. Caja 640:440. */
 .badge {
@@ -636,9 +600,6 @@ svg {
   .hero__cue span,
   .plate__b,
   .plate.is-flickering .plate__b {
-    animation: none;
-  }
-  .smiley:hover {
     animation: none;
   }
 }
