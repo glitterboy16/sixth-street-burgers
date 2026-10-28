@@ -901,25 +901,6 @@
 .venue h2 {
   font-size: clamp(48px, 7.5vw, 112px);
 }
-.venue__list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  color: var(--muted);
-}
-.venue__list li {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.venue__list i {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-}
 .venue__art {
   flex: 1 1 320px;
   display: flex;

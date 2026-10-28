@@ -2,12 +2,6 @@ import Image from "next/image";
 import Corner from "@/components/kit/Corner";
 import Line from "@/components/kit/Line";
 
-const traits = [
-  { color: "var(--red)", text: "Luz de neón" },
-  { color: "var(--teal)", text: "Cuero y ladrillo" },
-  { color: "var(--amber)", text: "Diner de noche" },
-];
-
 export default function Venue() {
   return (
     <section id="local" className="sec sec--themed venue">
@@ -22,14 +16,6 @@ export default function Venue() {
               BUEN SITIO.
             </Line>
           </h2>
-          <ul className="venue__list mono">
-            {traits.map((t) => (
-              <li key={t.text}>
-                <i style={{ background: t.color }} aria-hidden="true" />
-                {t.text}
-              </li>
-            ))}
-          </ul>
         </div>
         <div className="venue__art">
           <div className="venue__frame">
