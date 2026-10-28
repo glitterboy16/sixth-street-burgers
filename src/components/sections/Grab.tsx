@@ -5,7 +5,7 @@ import ImageSlot from "@/components/kit/ImageSlot";
 export default function Grab() {
   return (
     <section className="sec grab">
-      <Corner pos="tl">11 — Coge la tuya</Corner>
+      <Corner pos="tl">10 — Coge la tuya</Corner>
       <Corner pos="tr">Para llevar · Para quedarse</Corner>
       <div className="grab__row">
         <h2 className="display">

@@ -9,7 +9,6 @@ import BigType from "@/components/sections/BigType";
 import Fries from "@/components/sections/Fries";
 import Venue from "@/components/sections/Venue";
 import Collage from "@/components/sections/Collage";
-import Macro from "@/components/sections/Macro";
 import Grab from "@/components/sections/Grab";
 import Manifesto from "@/components/sections/Manifesto";
 import Wordmark from "@/components/sections/Wordmark";
@@ -35,7 +34,6 @@ export default function Home() {
         <Fries />
         <Venue />
         <Collage />
-        <Macro />
         <Grab />
         <Manifesto />
         <Wordmark />

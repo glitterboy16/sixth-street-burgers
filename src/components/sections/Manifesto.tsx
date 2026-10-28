@@ -6,7 +6,7 @@ import ImageSlot from "@/components/kit/ImageSlot";
 export default function Manifesto() {
   return (
     <section className="sec manifesto">
-      <Corner pos="tl">12 — Manifiesto</Corner>
+      <Corner pos="tl">11 — Manifiesto</Corner>
       <Corner pos="tr">Muerde fuerte. Vive más.</Corner>
       <div className="manifesto__grid">
         <div className="manifesto__card">

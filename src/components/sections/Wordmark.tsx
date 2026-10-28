@@ -7,7 +7,7 @@ const TEXT = "SIXTH STREET! SIXTH STREET! SIXTH STREET! ";
 export default function Wordmark() {
   return (
     <section className="wordmark" aria-label="Sixth Street">
-      <Corner pos="tl">13 — Sixth Street</Corner>
+      <Corner pos="tl">12 — Sixth Street</Corner>
       <Corner pos="tr">Lanzarote</Corner>
       <Marquee className="wordmark__row wordmark__row--a" text={TEXT} speed="36s" />
       <div className="wordmark__mid">

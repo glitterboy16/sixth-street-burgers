@@ -930,51 +930,7 @@
   padding-left: clamp(0px, 16vw, 320px);
 }
 
-/* ===== 10 De cerca ===== */
-.macro {
-  position: relative;
-  height: 100vh;
-  height: 100svh;
-  overflow: clip;
-  background: var(--plate);
-  color: var(--paper);
-  --corner: var(--paper);
-}
-.macro__img {
-  position: absolute;
-  inset: 0;
-  transform: scale(1.08);
-  transform-origin: 50% 50%;
-  will-change: transform;
-}
-.macro h2 {
-  position: absolute;
-  left: var(--gutter);
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: clamp(56px, 10vw, 160px);
-  color: var(--paper);
-  pointer-events: none;
-}
-.macro__sub {
-  position: absolute;
-  right: var(--gutter);
-  bottom: 24px;
-  max-width: 28ch;
-  text-align: right;
-  pointer-events: none;
-}
-.macro__bolt {
-  right: clamp(16px, 6vw, 96px);
-  top: 14%;
-  width: 40px;
-  height: 64px;
-  background: var(--red);
-  --from: scale(0.5) rotate(30deg);
-  --to: rotate(12deg);
-}
-
-/* ===== 11 Coge la tuya ===== */
+/* ===== 10 Coge la tuya ===== */
 .grab {
   background: var(--teal);
   color: var(--paper);
@@ -1033,7 +989,7 @@
   background: var(--cheese);
 }
 
-/* ===== 12 Manifiesto ===== */
+/* ===== 11 Manifiesto ===== */
 .manifesto {
   background: var(--paper);
   color: var(--ink);
@@ -1112,7 +1068,7 @@
   transform: rotate(-6deg);
 }
 
-/* ===== 13 Wordmark ===== */
+/* ===== 12 Wordmark ===== */
 .wordmark {
   position: relative;
   overflow: clip;
@@ -1155,7 +1111,7 @@
   transform: rotate(10deg);
 }
 
-/* ===== 14 CTA ===== */
+/* ===== 13 CTA ===== */
 .cta {
   background: var(--cheese);
   color: var(--ink);
@@ -1215,7 +1171,7 @@
   transform: scale(0.97);
 }
 
-/* ===== 15 Footer ===== */
+/* ===== 14 Footer ===== */
 /* El pie es siempre de noche: la pared de ladrillo con el neón del local detrás, respirando (se acerca y se
    aleja muy despacio), y el texto claro encima. Por eso fija la paleta oscura también en el tema claro. */
 .footer {

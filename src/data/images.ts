@@ -10,7 +10,6 @@ export type SlotId =
   | "producto-3-la-doble"
   | "que-lleva-render-abierta"
   | "patatas-cucurucho"
-  | "macro-queso-carne"
   | "coge-la-tuya-burger"
   | "manifiesto-burger";
 
@@ -69,12 +68,6 @@ export const slots: Record<SlotId, SlotImage | null> = {
     height: 1552,
     cutout: "contact",
   },
-  "macro-queso-carne": {
-    src: "/images/macro-queso-carne.webp",
-    alt: "Primer plano del cheddar fundido cayendo sobre el borde crujiente de la carne",
-    width: 3840,
-    height: 2143,
-  },
   "coge-la-tuya-burger": burgerCerrada("Smash burger de Sixth Street cerrada"),
   "manifiesto-burger": burgerCerrada("Smash burger de Sixth Street cerrada"),
 };
@@ -86,7 +79,6 @@ export const placeholders: Record<SlotId, string> = {
   "producto-3-la-doble": "La doble · foto estudio",
   "que-lleva-render-abierta": "Render hamburguesa abierta · capas flotando",
   "patatas-cucurucho": "Patatas en cucurucho a cuadros rojo/crema + bote de salsa (PNG sin fondo)",
-  "macro-queso-carne": "Macro: queso fundido y borde crujiente de la carne",
   "coge-la-tuya-burger": "Hamburguesa cerrada · misma foto del hero",
   "manifiesto-burger": "Hamburguesa · misma foto del hero",
 };

@@ -5,7 +5,7 @@ import Line from "@/components/kit/Line";
 export default function Cta() {
   return (
     <section id="visitanos" className="sec cta">
-      <Corner pos="tl">14 — Visítanos</Corner>
+      <Corner pos="tl">13 — Visítanos</Corner>
       <Corner pos="tr">Ya lo sabías</Corner>
       <h2 className="display">
         <Line>¿TIENES</Line>
