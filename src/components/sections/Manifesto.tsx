@@ -15,7 +15,6 @@ export default function Manifesto() {
             <Line delay="0.08s">MÁS SABOR.</Line>
           </h3>
           <div className="manifesto__square">
-            <div className="starburst manifesto__burst" aria-hidden="true" />
             <div className="manifesto__photo">
               <ImageSlot id="manifiesto-burger" shape="circle" sizes="320px" />
             </div>

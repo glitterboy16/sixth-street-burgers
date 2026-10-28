@@ -12,7 +12,6 @@ export default function Products() {
   const section = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
-  const bursts = useRef<(HTMLDivElement | null)[]>([]);
   const photos = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
@@ -29,9 +28,7 @@ export default function Products() {
       tr.style.transform = `translateX(${(-p * 200) / 3}%)`;
       for (let k = 0; k < 3; k++) {
         const d = clamp(p * 2 - k, -1, 1);
-        const b = bursts.current[k],
-          ph = photos.current[k];
-        if (b) b.style.transform = rm ? "" : `rotate(${-6 + d * 12}deg)`;
+        const ph = photos.current[k];
         if (ph) ph.style.transform = rm ? "" : `translateY(${-40 * d}px)`;
       }
     };
@@ -47,13 +44,6 @@ export default function Products() {
             const art = (
               <div className="product__art">
                 <div className="product__square">
-                  <div
-                    ref={(el) => {
-                      bursts.current[k] = el;
-                    }}
-                    className="starburst product__burst"
-                    aria-hidden="true"
-                  />
                   <div
                     ref={(el) => {
                       photos.current[k] = el;

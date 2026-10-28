@@ -475,22 +475,15 @@
   justify-content: center;
   position: relative;
 }
+/* sin estrella detrás (Angel, 2026-10-28): la foto de la mano va sola y más grande */
 .statement__square {
   position: relative;
-  width: min(100%, 70vmin);
+  width: min(100%, 84vmin);
   aspect-ratio: 1;
-}
-.statement__burst {
-  position: absolute;
-  inset: -14%;
-  background: var(--teal);
-  --from: scale(0.8) rotate(-10deg);
-  --to: rotate(6deg);
-  --dur: 0.6s;
 }
 .statement__photo {
   position: absolute;
-  inset: -2%;
+  inset: -4%;
 }
 .statement__sparkle {
   right: -2%;
@@ -704,12 +697,6 @@
   width: min(100%, 76vmin);
   aspect-ratio: 1;
 }
-.product__burst {
-  position: absolute;
-  inset: 0;
-  background: var(--paper);
-  will-change: transform;
-}
 .product__photo {
   position: absolute;
   inset: 3%;
@@ -733,7 +720,6 @@
     height: auto;
     min-height: 80svh;
   }
-  .product__burst,
   .product__photo {
     transform: none !important;
   }
@@ -1095,14 +1081,10 @@
   --ease: var(--ease-fly);
   --op-dur: 0.4s;
 }
-.grab__burst {
-  position: absolute;
-  inset: 0;
-  background: var(--red);
-}
+/* sin estrella detrás: la foto ocupa el sitio que dejaba */
 .grab__photo {
   position: absolute;
-  inset: 12%;
+  inset: 2%;
 }
 .grab__sparkle {
   top: -4%;
@@ -1170,14 +1152,9 @@
   width: min(100%, 320px);
   aspect-ratio: 1;
 }
-.manifesto__burst {
-  position: absolute;
-  inset: 0;
-  background: var(--paper);
-}
 .manifesto__photo {
   position: absolute;
-  inset: 14%;
+  inset: 4%;
 }
 .manifesto__card .sparkle {
   top: 18px;

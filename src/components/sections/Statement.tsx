@@ -25,7 +25,6 @@ export default function Statement() {
         </div>
         <div className="statement__art">
           <div className="statement__square">
-            <div className="starburst pop statement__burst" data-reveal="1" aria-hidden="true" />
             <div className="statement__photo">
               <ImageSlot id="statement-mano-burger" sizes="(max-width: 640px) 80vw, 60vmin" />
             </div>

@@ -14,7 +14,6 @@ export default function Grab() {
         </h2>
         <div className="grab__art">
           <div className="grab__square" data-reveal="1">
-            <div className="starburst grab__burst" aria-hidden="true" />
             <div className="grab__photo">
               <ImageSlot id="coge-la-tuya-burger" shape="circle" sizes="(max-width: 640px) 80vw, 52vmin" />
             </div>
