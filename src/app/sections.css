@@ -1137,6 +1137,23 @@
   line-height: 1.8;
   color: var(--paper-muted);
 }
+/* foto del neón OPEN (Instagram del local), como una foto pinchada junto al texto */
+.manifesto__open {
+  flex: none;
+  width: clamp(190px, 24vw, 280px);
+  margin: 0;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  box-shadow: 10px 12px 0 var(--teal);
+  --from: scale(0.9) rotate(-9deg);
+  --to: rotate(-4deg);
+  --delay: 0.15s;
+}
+.manifesto__open img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
 
 /* ===== 12 Wordmark ===== */
 .wordmark {
@@ -1268,7 +1285,7 @@
 }
 .footer__wall img {
   object-fit: cover;
-  object-position: 50% 30%;
+  object-position: 50% 42%;
   transform-origin: 55% 28%;
   animation: wall-breathe 24s ease-in-out infinite alternate;
   will-change: transform;
@@ -1278,7 +1295,18 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgb(11 10 9 / 0.38) 0%, rgb(11 10 9 / 0.7) 45%, rgb(11 10 9 / 0.94) 100%);
+  background: linear-gradient(180deg, rgb(11 10 9 / 0.22) 0%, rgb(11 10 9 / 0.6) 45%, rgb(11 10 9 / 0.94) 100%);
+}
+.footer__wall-img--tall {
+  display: none;
+}
+@media (max-width: 639px) {
+  .footer__wall-img--wide {
+    display: none;
+  }
+  .footer__wall-img--tall {
+    display: block;
+  }
 }
 @keyframes wall-breathe {
   from {

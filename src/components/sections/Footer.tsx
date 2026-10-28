@@ -14,8 +14,10 @@ const lines = (arr: string[]) =>
 export default function Footer() {
   return (
     <footer className="footer">
+      {/* foto real del neón sobre el ladrillo (Instagram del local): banda apaisada en escritorio, vertical en móvil */}
       <div className="footer__wall" aria-hidden="true">
-        <Image src="/images/pared-neon.webp" alt="" fill sizes="100vw" />
+        <Image src="/images/pared-neon-v2.webp" alt="" fill sizes="100vw" className="footer__wall-img footer__wall-img--wide" />
+        <Image src="/images/pared-neon-v2-v.webp" alt="" fill sizes="100vw" className="footer__wall-img footer__wall-img--tall" />
       </div>
       <div className="footer__brand">
         <WelcomeBadge className="footer__badge" id="rombo-footer" reveal />

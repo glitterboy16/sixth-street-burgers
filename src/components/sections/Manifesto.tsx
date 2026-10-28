@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Corner from "@/components/kit/Corner";
 import Line from "@/components/kit/Line";
 import ImageSlot from "@/components/kit/ImageSlot";
@@ -28,6 +29,15 @@ export default function Manifesto() {
           </h2>
           <div className="manifesto__row">
             <p className="mono">Abrimos cada día. Terraza y salón. Para llevar.</p>
+            <figure className="manifesto__open" data-reveal="1">
+              <Image
+                src="/images/pared-open.webp"
+                alt="Neón OPEN sobre la pared de ladrillo del local, entre carteles antiguos"
+                width={1200}
+                height={1500}
+                sizes="(max-width: 640px) 56vw, 280px"
+              />
+            </figure>
           </div>
         </div>
       </div>
