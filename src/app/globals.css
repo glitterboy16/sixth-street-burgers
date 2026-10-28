@@ -29,6 +29,7 @@
   --ease-reveal: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-fly: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
   --font-display: var(--font-anton), Impact, "Arial Narrow", sans-serif;
   --font-body: var(--font-geist), system-ui, sans-serif;
@@ -44,6 +45,12 @@
   --fg: #0b0a09;
   --muted: #605850;
   color-scheme: light;
+}
+/* en escritorio la nav crece para un logo más grande (navH() en src/lib/motion.ts tiene que coincidir) */
+@media (min-width: 900px) {
+  :root {
+    --nav-h: 88px;
+  }
 }
 
 /* ---------- Base ---------- */
@@ -269,13 +276,23 @@ svg {
 .badge .t-script {
   font-family: var(--font-yellowtail), "Brush Script MT", cursive;
 }
-.badge /* "to Fabulous" parpadea de vez en cuando como el neón del navbar (solo existe en la versión neón) */
-.badge__fab {
-  animation: neon-idle 7s steps(1) infinite;
-  animation-delay: 1.4s;
+/* "to Fabulous" (solo en la versión neón): lo que falla es la LUZ del tubo; el tubo apagado de debajo sigue a la
+   vista, así que las letras nunca desaparecen. Cuando el rombo aparece, el neón se enciende (chisporrotea y se
+   queda fijo) y a partir de ahí falla de vez en cuando y vuelve a prender. */
+.badge__fab-lit {
+  animation: neon-light 7s steps(1) 1.4s infinite;
+}
+.badge[data-reveal] .badge__fab-lit {
+  animation: none;
+}
+.badge[data-reveal][data-shown] .badge__fab-lit {
+  animation:
+    neon-light 7s steps(1) 1.25s infinite,
+    neon-ignite 0.8s steps(1) 0.45s backwards;
 }
 @media (prefers-reduced-motion: reduce) {
-  .badge__fab {
+  .badge .badge__fab-lit,
+  .badge[data-reveal][data-shown] .badge__fab-lit {
     animation: none;
   }
 }
@@ -306,15 +323,19 @@ svg {
   display: none;
 }
 
-/* Placa del logo: letrero de bombillas. De noche (tema oscuro) placa negra y letras encendidas; de día
-   (tema claro) placa amarilla con letras rojas, como el rombo WELCOME: un letrero apagado no brilla. */
+/* Placa del logo: letrero de neón con dos tubos, SIXTH STREET y BURGER CLUB. Cada línea es el tubo apagado (el
+   texto) con su luz encima (::after con el mismo texto, data-t): lo que parpadea es solo la luz, así que cuando
+   falla se ven las letras apagadas, nunca desaparecen. De noche (tema oscuro) placa negra y tubos naranjas; de día
+   (tema claro) placa amarilla con letras rojas mate, como el rombo WELCOME: es pintura, no luz, y no parpadea. */
 .plate {
+  --a: 26px; /* cuerpo de SIXTH STREET; BURGER CLUB va al 64 % */
+  --tube: #6b4424; /* tubo apagado */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
   flex: none;
-  padding: 8px 14px;
+  padding: 7px 14px;
   background: var(--plate);
   border: 1px solid #2a2622;
   border-radius: 6px;
@@ -322,25 +343,53 @@ svg {
   transition: background-color 0.35s, border-color 0.35s;
 }
 .plate span {
+  position: relative;
   font-family: var(--font-display);
   text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--tube);
+  transition: color 0.35s;
+}
+.plate span::after {
+  content: attr(data-t);
+  position: absolute;
+  inset: 0;
   color: var(--bulb);
   text-shadow: 0 0 10px rgba(255, 138, 30, 0.8);
-  transition: color 0.35s, text-shadow 0.35s;
+  pointer-events: none;
 }
 .plate__a {
-  font-size: 26px;
+  font-size: var(--a);
   letter-spacing: 0.06em;
+  margin-right: -0.06em;
 }
+/* BURGER CLUB espaciado hasta ocupar el mismo ancho que SIXTH STREET; el margen negativo quita el espacio que
+   deja el letter-spacing detrás de la última letra */
 .plate__b {
-  font-size: 15px;
-  letter-spacing: 0.24em;
-  text-shadow: 0 0 8px rgba(255, 138, 30, 0.8);
-  /* solo el neón de abajo parpadea: un tubo que falla de vez en cuando */
-  animation: neon-idle 9s steps(1) infinite;
+  font-size: calc(var(--a) * 0.64);
+  letter-spacing: 0.375em; /* medido con Anton: (ancho de SIXTH STREET − ancho de BURGER CLUB sin espaciar) / 10 */
+  margin-right: -0.375em;
 }
-.plate.is-flickering .plate__b {
-  animation: flicker 0.25s steps(1) 1;
+.plate__b::after {
+  text-shadow: 0 0 8px rgba(255, 138, 30, 0.8);
+  animation: neon-light 9s steps(1) infinite;
+}
+/* al pasar a modo oscuro el letrero se enciende: SIXTH STREET prende enseguida y BURGER CLUB chisporrotea más */
+.plate.is-igniting .plate__a::after {
+  animation: neon-ignite 0.5s steps(1) backwards;
+}
+.plate.is-igniting .plate__b::after {
+  animation:
+    neon-light 9s steps(1) infinite,
+    neon-ignite 0.8s steps(1) backwards;
+}
+@media (min-width: 900px) {
+  .plate {
+    --a: clamp(28px, 1.1vw + 18px, 34px);
+    gap: 5px;
+    padding: 7px 18px;
+    border-radius: 8px;
+  }
 }
 :root[data-theme="light"] .plate {
   background: var(--cheese);
@@ -348,7 +397,9 @@ svg {
 }
 :root[data-theme="light"] .plate span {
   color: var(--badge-red);
-  text-shadow: none;
+}
+:root[data-theme="light"] .plate span::after {
+  display: none;
 }
 
 /* Botones */
@@ -393,6 +444,25 @@ svg {
   height: 56px;
   padding: 0 26px;
   font-size: 16px;
+}
+/* en escritorio todos los botones un punto más grandes */
+@media (min-width: 900px) {
+  .btn {
+    height: 56px;
+    padding: 0 28px;
+    font-size: 16px;
+    gap: 10px;
+  }
+  .btn--sm {
+    height: 48px;
+    padding: 0 22px;
+    font-size: 15px;
+  }
+  .btn--lg {
+    height: 64px;
+    padding: 0 34px;
+    font-size: 18px;
+  }
 }
 .btn--primary {
   background: var(--red);
@@ -598,8 +668,9 @@ svg {
   .marquee,
   .arrow--wiggle,
   .hero__cue span,
-  .plate__b,
-  .plate.is-flickering .plate__b {
+  .plate__b::after,
+  .plate.is-igniting .plate__a::after,
+  .plate.is-igniting .plate__b::after {
     animation: none;
   }
 }
@@ -621,58 +692,65 @@ svg {
     transform: translateX(0);
   }
 }
-@keyframes flicker {
+/* La luz de un tubo de neón que falla: se va (queda a la vista el tubo apagado), intenta prender un par de veces y
+   se queda fija; más tarde, un fallo corto. Solo se anima la opacidad de la capa de luz, nunca las letras. */
+@keyframes neon-light {
   0%,
-  100% {
-    opacity: 1;
-  }
-  12% {
-    opacity: 0.15;
-  }
-  24% {
-    opacity: 1;
-  }
   40% {
+    opacity: 1;
+  }
+  40.4% {
+    opacity: 0.12;
+  }
+  43% {
+    opacity: 0.6;
+  }
+  43.4% {
+    opacity: 0.08;
+  }
+  44.2% {
+    opacity: 0.9;
+  }
+  44.6% {
     opacity: 0.3;
   }
-  55% {
-    opacity: 1;
-  }
-  72% {
-    opacity: 0.2;
-  }
-  85% {
-    opacity: 1;
-  }
-}
-/* neón que falla: dos fallos breves por ciclo */
-@keyframes neon-idle {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  41% {
-    opacity: 1;
-  }
-  41.4% {
-    opacity: 0.3;
-  }
-  41.9% {
-    opacity: 1;
-  }
-  42.8% {
-    opacity: 0.55;
-  }
-  43.3% {
-    opacity: 1;
-  }
+  45.1%,
   78% {
     opacity: 1;
   }
   78.3% {
     opacity: 0.2;
   }
-  78.9% {
+  78.8%,
+  100% {
+    opacity: 1;
+  }
+}
+/* El neón se enciende: arranca apagado (solo se ve el tubo), chisporrotea y se queda fijo. */
+@keyframes neon-ignite {
+  0% {
+    opacity: 0;
+  }
+  14% {
+    opacity: 0.75;
+  }
+  20% {
+    opacity: 0.04;
+  }
+  38% {
+    opacity: 0.9;
+  }
+  46% {
+    opacity: 0.2;
+  }
+  60% {
+    opacity: 1;
+  }
+  68% {
+    opacity: 0.5;
+  }
+  76%,
+  100% {
     opacity: 1;
   }
 }

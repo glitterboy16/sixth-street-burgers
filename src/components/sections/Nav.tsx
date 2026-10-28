@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { Menu, Moon, Sun, X } from "lucide-react";
 import { nav } from "@/data/site";
 
 type Theme = "dark" | "light";
@@ -39,25 +40,37 @@ export default function Nav() {
     try {
       localStorage.setItem("ssb-theme", next);
     } catch {}
+    // de noche el letrero se enciende (chisporrotea y se queda fijo); de día es pintura mate y no hace nada
     const el = logo.current;
     if (el) {
-      el.classList.remove("is-flickering");
-      void el.offsetWidth;
-      el.classList.add("is-flickering");
+      el.classList.remove("is-igniting");
+      if (next === "dark") {
+        void el.offsetWidth;
+        el.classList.add("is-igniting");
+      }
     }
   };
 
   return (
     <header className="nav">
+      {/* Cada línea es un tubo de neón: el texto es el tubo (se ve apagado) y ::after (data-t) es su luz,
+          que es lo único que parpadea. */}
       <a
         ref={logo}
         href="#top"
         className="plate"
-        aria-label="Sixth Street Burgers, volver arriba"
-        onAnimationEnd={(e) => e.currentTarget.classList.remove("is-flickering")}
+        aria-label="Sixth Street Burger Club, volver arriba"
+        onAnimationEnd={(e) => {
+          if (e.animationName === "neon-ignite" && (e.target as HTMLElement).classList.contains("plate__b"))
+            e.currentTarget.classList.remove("is-igniting");
+        }}
       >
-        <span className="plate__a">SIXTH STREET</span>
-        <span className="plate__b">BURGERS</span>
+        <span className="plate__a" data-t="SIXTH STREET">
+          SIXTH STREET
+        </span>
+        <span className="plate__b" data-t="BURGER CLUB">
+          BURGER CLUB
+        </span>
       </a>
 
       <nav className="nav__links" aria-label="Secciones">
@@ -72,14 +85,16 @@ export default function Nav() {
         <a href="#visitanos" className="btn btn--primary btn--sm nav__cta">
           Pedir ahora
         </a>
+        {/* sol = pasar a modo claro, luna = pasar a modo oscuro; los dos están siempre y el CSS cruza uno con otro */}
         <button
           type="button"
-          className="nav__icon"
+          className="nav__icon nav__theme"
           onClick={toggleTheme}
           aria-label={theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
-          title="Modo claro / oscuro"
+          title={theme === "dark" ? "Modo claro" : "Modo oscuro"}
         >
-          {theme === "dark" ? "○" : "●"}
+          <Sun className="nav__ico nav__ico--sun" aria-hidden="true" />
+          <Moon className="nav__ico nav__ico--moon" aria-hidden="true" />
         </button>
         <button
           type="button"
@@ -89,7 +104,8 @@ export default function Nav() {
           aria-expanded={open}
           aria-controls="nav-menu"
         >
-          {open ? "✕" : "☰"}
+          <Menu className="nav__ico nav__ico--menu" aria-hidden="true" />
+          <X className="nav__ico nav__ico--close" aria-hidden="true" />
         </button>
       </div>
 

@@ -66,8 +66,12 @@ function Neon({ id }: { id: string }) {
           </text>
         </g>
       ))}
-      {/* to Fabulous: tubo azul con el mismo parpadeo ocioso que el BURGERS del navbar (.badge__fab) */}
-      <g className="badge__fab">
+      {/* to Fabulous: tubo azul que falla como el BURGER CLUB del navbar. Debajo el tubo apagado (siempre se ve);
+          encima su luz (halo + núcleo), que es lo único que parpadea (.badge__fab-lit). */}
+      <text x={CX} y="178" textAnchor="middle" className="t-script badge__tube" fontSize="44" fill="#1d4a54" stroke="#2c6a78" strokeWidth="1.2" paintOrder="stroke" strokeLinejoin="round">
+        to Fabulous
+      </text>
+      <g className="badge__fab-lit">
         <text x={CX} y="178" textAnchor="middle" className="t-script" fontSize="44" fill="#19c3e6" stroke="#19c3e6" strokeWidth="5" filter={f} opacity="0.8">
           to Fabulous
         </text>

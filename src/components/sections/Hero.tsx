@@ -5,7 +5,7 @@ import Image from "next/image";
 import { FRAMES, type FrameSize } from "@/data/frames";
 import { FRAMES_DARK } from "@/data/frames-dark";
 import { heroLabels, site } from "@/data/site";
-import { clamp, NAV_H, onThemeChange, prefersReducedMotion, sm } from "@/lib/motion";
+import { clamp, navH, onThemeChange, prefersReducedMotion, sm } from "@/lib/motion";
 import Corner from "@/components/kit/Corner";
 import TodayHours from "@/components/kit/TodayHours";
 
@@ -430,7 +430,7 @@ export default function Hero() {
       raf = requestAnimationFrame(tick);
     };
     // progreso del scroll sin tocar el layout: la posición de la sección se midió en fit()
-    const progressNow = () => clamp((window.scrollY + NAV_H - secTop) / range, 0, 1);
+    const progressNow = () => clamp((window.scrollY + navH() - secTop) / range, 0, 1);
     const update = () => {
       target = progressNow();
       if (!raf) raf = requestAnimationFrame(tick);

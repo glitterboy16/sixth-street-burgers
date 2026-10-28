@@ -1,4 +1,14 @@
-export const NAV_H = 72;
+// Alto de la nav: 72 px en móvil y tablet, 88 px en escritorio (≥ 900 px). Tiene que coincidir con --nav-h.
+let navCache = 72;
+if (typeof window !== "undefined") {
+  const wide = window.matchMedia("(min-width: 900px)");
+  const read = () => {
+    navCache = wide.matches ? 88 : 72;
+  };
+  read();
+  wide.addEventListener("change", read);
+}
+export const navH = () => navCache;
 
 export const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
 
@@ -17,7 +27,7 @@ export const prefersReducedMotion = () =>
  */
 export function stageProgress(section: HTMLElement, stage: HTMLElement) {
   const rc = section.getBoundingClientRect();
-  return clamp((NAV_H - rc.top) / Math.max(1, rc.height - stage.offsetHeight), 0, 1);
+  return clamp((navH() - rc.top) / Math.max(1, rc.height - stage.offsetHeight), 0, 1);
 }
 
 /**

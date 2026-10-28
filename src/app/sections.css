@@ -43,8 +43,6 @@
   border-radius: 6px;
   background: transparent;
   color: var(--fg);
-  font-size: 16px;
-  line-height: 1;
   transition: border-color 0.2s, transform 0.1s;
 }
 .nav__icon:hover {
@@ -61,7 +59,63 @@
 }
 .nav__burger {
   display: none;
-  font-size: 18px;
+}
+/* Iconos (Lucide): sol = pasar a modo claro, luna = pasar a modo oscuro; menú / cerrar. Los dos de cada botón
+   están siempre en la misma celda y se cruzan: el que entra gira hasta su sitio y el que sale sigue girando en el
+   mismo sentido, borroso y algo más pequeño (nunca desde scale 0). */
+.nav__ico {
+  grid-area: 1 / 1;
+  width: 20px;
+  height: 20px;
+  transition:
+    opacity 0.2s var(--ease-out),
+    transform 0.25s var(--ease-out),
+    filter 0.2s var(--ease-out);
+}
+.nav__ico--moon,
+.nav__burger:not([aria-expanded="true"]) .nav__ico--close {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.9);
+  filter: blur(2px);
+}
+:root[data-theme="light"] .nav__ico--sun,
+.nav__burger[aria-expanded="true"] .nav__ico--menu {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.9);
+  filter: blur(2px);
+}
+:root[data-theme="light"] .nav__ico--moon {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav__ico {
+    transform: none !important;
+    filter: none !important;
+    transition: opacity 0.15s;
+  }
+}
+/* escritorio: nav más alta (88 px), botones de icono más grandes */
+@media (min-width: 900px) {
+  .nav {
+    gap: 24px;
+  }
+  .nav__links {
+    gap: 32px;
+    font-size: 13px;
+  }
+  .nav__right {
+    gap: 12px;
+  }
+  .nav__icon {
+    width: 48px;
+    height: 48px;
+  }
+  .nav__ico {
+    width: 22px;
+    height: 22px;
+  }
 }
 .nav__menu {
   position: absolute;
@@ -1350,6 +1404,15 @@
   width: clamp(280px, 36vw, 480px); /* sin rótulo al lado: el rombo es la marca del pie */
   --from: scale(0.8) rotate(-20deg);
   --to: rotate(-5deg);
+}
+/* móvil: el rombo centrado y casi a todo el ancho de la pantalla (las puntas quedan dentro) */
+@media (max-width: 639px) {
+  .footer__brand {
+    justify-content: center;
+  }
+  .footer__badge {
+    width: min(100vw - 16px, 520px);
+  }
 }
 .footer__grid {
   display: grid;
