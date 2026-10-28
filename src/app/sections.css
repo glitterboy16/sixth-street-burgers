@@ -242,6 +242,7 @@
   }
   .hero__square {
     will-change: transform;
+    --callout-gap: 10px;
   }
   /* las etiquetas caben a la derecha del fotograma sin salirse de la pantalla */
   .hero__label .callout__text {
@@ -254,6 +255,7 @@
   top: 0;
   height: 100%;
   aspect-ratio: 3 / 4;
+  --callout-gap: 14px; /* margen entre la capa y el punto de su etiqueta */
 }
 .hero__box {
   position: absolute;
@@ -294,7 +296,7 @@
 }
 .hero__label {
   position: absolute;
-  left: 88%;
+  left: 88%; /* respaldo: el JS pone cada etiqueta a --callout-gap del borde derecho de su capa */
   top: 0;
   width: max-content;
   opacity: 0;

@@ -11,5 +11,8 @@ export const FRAMES = {
   closed: {"top":42.6,"bottom":93.6,"x":[13.8,84.2]},
   /** bandas verticales de píxeles opacos del fotograma abierto (último), % del alto */
   openBands: [[5.4,24.6],[26.9,40.6],[41.5,52.8],[52.8,74.4],[75.6,93.6]] as [number, number][],
+  /** bordes izquierdo y derecho de píxeles opacos de cada banda abierta, % del ancho (misma lista que openBands) */
+  openLeft: [18.2,12.4,18.3,15.8,18.5],
+  openRight: [81.3,86.4,79.6,82.5,80.8],
   path: (i: number, size: FrameSize) => `/frames/${size}/frame_${String(i).padStart(3, "0")}.webp`,
 };

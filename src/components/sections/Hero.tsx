@@ -37,6 +37,14 @@ function labelCenters(b: [number, number][]) {
   return Array.from({ length: n }, (_, i) => top + ((bottom - top) * i) / (n - 1));
 }
 
+// Borde derecho de cada capa abierta (% del ancho): el punto de cada etiqueta va a --callout-gap de SU capa,
+// así todas guardan el mismo margen y ninguna pisa la hamburguesa (el pan, la lechuga y el queso no miden igual).
+function labelEdges(set: FrameSet) {
+  const n = heroLabels.length;
+  const r = (set as { openRight?: number[] }).openRight;
+  return r && r.length === n ? r : Array(n).fill(88);
+}
+
 // Geometría de un juego: caja de la cerrada (zoom, subida, sombra) y etiquetas de la abierta.
 function geometry(set: FrameSet) {
   const C = set.closed;
@@ -49,6 +57,7 @@ function geometry(set: FrameSet) {
     SHADOW_X: (C.x[0] + C.x[1]) / 2,
     SHADOW_W: (C.x[1] - C.x[0]) * 1.12,
     LABEL_Y: labelCenters(set.openBands),
+    LABEL_X: labelEdges(set),
   };
 }
 const GEO: Record<Theme, ReturnType<typeof geometry>> = { dark: geometry(FRAMES_DARK), light: geometry(FRAMES) };
@@ -136,6 +145,9 @@ export default function Hero() {
         sh.style.top = `${g.C.bottom - 0.8}%`;
         sh.style.width = `${g.SHADOW_W}%`;
       }
+      labels.current.forEach((el, k) => {
+        if (el) el.style.left = `calc(${g.LABEL_X[k]}% + var(--callout-gap, 14px))`;
+      });
     };
 
     // fotograma cargado más cercano a i (mientras se descargan)
@@ -183,7 +195,11 @@ export default function Hero() {
       const gap = parseFloat(cs.rowGap) || 16;
       const btns = actions.current ? actions.current.offsetHeight + gap : 0; // los botones van debajo de la caja
       const avail = st.clientHeight - cp.offsetHeight - btns - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - gap;
-      const byWidth = ((vw - 172) / 0.82) * (4 / 3);
+      // ancho: la capa más ancha + margen + la etiqueta más larga tienen que caber en la pantalla
+      const maxRight = Math.max(...g.LABEL_X) / 100;
+      const labelW = Math.max(0, ...labels.current.map((el) => (el ? el.offsetWidth : 0))) || 150;
+      const gapPx = parseFloat(getComputedStyle(sq).getPropertyValue("--callout-gap")) || 10;
+      const byWidth = ((vw - 32 - labelW - gapPx) / maxRight) * (4 / 3);
       const h = Math.round(Math.max(180, Math.min(avail, byWidth, 400)));
       if (h !== boxH) {
         boxH = h;

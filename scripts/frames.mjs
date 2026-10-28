@@ -216,6 +216,20 @@ const closedBox = {
   bottom: Math.round((cb0.maxY / closed.h) * 1000) / 10,
   x: [Math.round((cb0.minX / closed.w) * 1000) / 10, Math.round((cb0.maxX / closed.w) * 1000) / 10],
 };
+// Borde derecho (y izquierdo) de píxeles opacos de cada banda del fotograma abierto, % del ancho: el punto de
+// cada etiqueta se coloca a un margen fijo del borde de SU capa (el pan, la lechuga y el queso no miden igual).
+const edges = openBands.map(([a, b]) => {
+  const ya = Math.round((a / 100) * open.h), yb = Math.round((b / 100) * open.h);
+  let minX = open.w, maxX = 0;
+  for (let y = ya; y <= yb && y < open.h; y++)
+    for (let x = 0; x < open.w; x++)
+      if (open.data[(y * open.w + x) * 4 + 3] > 40) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+      }
+  return [Math.round((minX / open.w) * 1000) / 10, Math.round((maxX / open.w) * 1000) / 10];
+});
+const openLeft = edges.map((e) => e[0]), openRight = edges.map((e) => e[1]);
 fs.writeFileSync(
   MANIFEST,
   `// Generado por scripts/frames.mjs — no editar a mano. Porcentajes respecto al fotograma 3:4.
@@ -231,6 +245,9 @@ export const ${EXPORT} = {
   closed: ${JSON.stringify(closedBox)},
   /** bandas verticales de píxeles opacos del fotograma abierto (último), % del alto */
   openBands: ${JSON.stringify(openBands)} as [number, number][],
+  /** bordes izquierdo y derecho de píxeles opacos de cada banda abierta, % del ancho (misma lista que openBands) */
+  openLeft: ${JSON.stringify(openLeft)},
+  openRight: ${JSON.stringify(openRight)},
   path: (i: number, size: FrameSize) => \`${PREFIX}/\${size}/frame_\${String(i).padStart(3, "0")}.webp\`,
 };
 `,

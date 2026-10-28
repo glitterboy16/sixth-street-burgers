@@ -11,5 +11,8 @@ export const FRAMES_DARK = {
   closed: {"top":42.5,"bottom":93.9,"x":[13.7,84.4]},
   /** bandas verticales de píxeles opacos del fotograma abierto (último), % del alto */
   openBands: [[5.2,24.6],[26.7,40.7],[41.4,52.8],[52.8,74.7],[75.7,93.9]] as [number, number][],
+  /** bordes izquierdo y derecho de píxeles opacos de cada banda abierta, % del ancho (misma lista que openBands) */
+  openLeft: [18.1,12.2,18.1,15.6,18.4],
+  openRight: [81.5,86.8,79.8,82.8,81],
   path: (i: number, size: FrameSize) => `/frames/dark/${size}/frame_${String(i).padStart(3, "0")}.webp`,
 };
