@@ -250,23 +250,24 @@
   transform-origin: 50% 71%;
   will-change: transform;
 }
-/* Sombra de base de la hamburguesa montada (los fotogramas van sin sombra horneada). Dos elipses de
-   degradado radial, sin filtros: un núcleo de contacto bajo el pan y una penumbra ancha y tenue; tinta
-   cálida en el tema claro. El pan inferior va del 23 % al 77 % del ancho y apoya al 92,6 % del alto.
-   Se desvanece al abrirse (JS). */
+/* Sombra de contacto de la hamburguesa montada (dentro de .hero__box: escala y sube con el zoom de la
+   cerrada). La luz principal de los renders viene de arriba a la derecha, así que la sombra cae un poco a la
+   izquierda: núcleo denso bajo el pan y penumbra ancha. Se desvanece al abrirse (JS). Tinta cálida en el
+   tema claro; en el oscuro casi no se ve sobre el fondo negro, y así lo quiere Angel. */
 .hero__shadow {
   --ink: 0 0 0;
   position: absolute;
   left: 50%;
   top: 92.5%;
   width: 70%;
-  height: 11%;
-  transform: translate(-50%, -50%);
+  height: 12%;
+  transform: translate(-53%, -50%);
   background:
-    radial-gradient(closest-side, rgb(var(--ink) / 0.58) 0%, rgb(var(--ink) / 0.34) 45%, rgb(var(--ink) / 0) 100%)
-      center / 68% 52% no-repeat,
-    radial-gradient(closest-side, rgb(var(--ink) / 0.26) 0%, rgb(var(--ink) / 0.1) 55%, rgb(var(--ink) / 0) 100%)
-      center / 100% 100% no-repeat;
+    radial-gradient(closest-side, rgb(var(--ink) / 0.82) 0%, rgb(var(--ink) / 0.5) 40%, rgb(var(--ink) / 0) 100%)
+      52% center / 64% 46% no-repeat,
+    radial-gradient(closest-side, rgb(var(--ink) / 0.4) 0%, rgb(var(--ink) / 0.14) 55%, rgb(var(--ink) / 0) 100%)
+      44% center / 112% 100% no-repeat;
+  pointer-events: none;
 }
 :root[data-theme="light"] .hero__shadow {
   --ink: 58 34 20;
@@ -311,29 +312,6 @@
   display: block;
   width: 100%;
   height: auto;
-}
-/* Estrellas de neón rojo fijo, el mismo brillo que las letras del logo (sin parpadeo). El halo va en el
-   contenedor y la forma (clip-path) en la estrella de dentro: clip-path recorta también el filtro del propio
-   elemento, así que un drop-shadow sobre la estrella nunca se vería. El halo escala con el tamaño (--s). */
-.hero__sparkle {
-  position: absolute;
-  z-index: 8;
-  pointer-events: none;
-  filter: drop-shadow(0 0 calc(var(--s) * 0.18) rgba(255, 46, 59, 1)) drop-shadow(0 0 calc(var(--s) * 0.5) rgba(255, 46, 59, 0.8))
-    drop-shadow(0 0 calc(var(--s) * 1.1) rgba(255, 46, 59, 0.45));
-  --from: scale(0.4);
-  --to: none;
-}
-.hero__star {
-  inset: 0;
-  background: var(--red); /* un solo tono, como las letras del logo: el neón es solo el halo */
-}
-/* tema claro: amarillas y planas, como el logo claro (sin neón) */
-:root[data-theme="light"] .hero__sparkle {
-  filter: none;
-}
-:root[data-theme="light"] .hero__star {
-  background: var(--cheese);
 }
 @media (max-width: 639px) {
   /* en móvil la hamburguesa va sola: el sello taparía el texto o el pan */

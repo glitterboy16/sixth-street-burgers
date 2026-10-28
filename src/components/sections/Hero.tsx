@@ -54,15 +54,6 @@ function geometry(set: FrameSet) {
 const GEO: Record<Theme, ReturnType<typeof geometry>> = { dark: geometry(FRAMES_DARK), light: geometry(FRAMES) };
 const G0 = GEO.dark; // tema por defecto: lo que lleva el HTML inicial
 
-// Estrellas alrededor de la hamburguesa: en las esquinas del fotograma (libres tanto cerrada como abierta) y
-// nunca sobre el margen izquierdo, que puede quedar bajo el texto. Tamaños distintos; en el tema oscuro son
-// rojas con el neón del logo, en el claro amarillas y planas como el logo claro.
-const SPARKLES = [
-  { top: "4%", left: "44%", size: 42, delay: 0.2 },
-  { top: "3%", left: "76%", size: 28, delay: 0.3 },
-  { top: "96%", left: "74%", size: 34, delay: 0.4 },
-];
-
 export default function Hero() {
   const section = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
@@ -88,11 +79,12 @@ export default function Hero() {
     const ctx = cv.getContext("2d");
     if (!ctx) return;
 
-    // Móvil: la cerrada ocupa casi toda la pantalla, así que usa los fotogramas grandes (uno de cada dos: la
-    // mitad de descarga); la versión ligera solo en pantallas de baja densidad.
+    // Escritorio: el vídeo 2K tal cual (h). Móvil: la cerrada ocupa casi toda la pantalla, así que usa los
+    // fotogramas grandes (d, uno de cada dos: la mitad de descarga); la versión ligera (m) solo en pantallas
+    // de baja densidad.
     const mobile = window.innerWidth < 640;
-    const size: FrameSize = mobile && window.devicePixelRatio < 2 ? "m" : "d";
-    const stride = mobile && size === "d" ? 2 : 1;
+    const size: FrameSize = !mobile ? "h" : window.devicePixelRatio < 2 ? "m" : "d";
+    const stride = size === "d" ? 2 : 1;
     const { width, height } = FRAMES.sizes[size]; // los dos juegos salen del mismo script: mismo tamaño
     cv.width = width;
     cv.height = height;
@@ -173,8 +165,34 @@ export default function Hero() {
     // TEXT_GAP del texto; el borde izquierdo de la cerrada está al C.x[0] % del fotograma y la caja escala
     // desde su centro horizontal. Móvil (texto encima): plano completo, casi todo el ancho de la pantalla,
     // centrada; abierta vuelve a su sitio para que quepan las etiquetas a la derecha.
+    // Móvil: el alto de la caja es el espacio que deja el texto en el escenario (la hamburguesa nunca pisa
+    // los botones), sin pasar del ancho que permite la pantalla con las etiquetas al lado ni de 400 px.
+    const grid = sec.querySelector<HTMLElement>(".hero__grid");
+    let boxH = 0;
+    const sizeMobileBox = (vw: number) => {
+      const cp = copy.current;
+      if (!grid || !cp) return;
+      if (vw >= 640) {
+        if (boxH) {
+          grid.style.removeProperty("--box");
+          boxH = 0;
+        }
+        return;
+      }
+      const cs = getComputedStyle(grid);
+      const gap = parseFloat(cs.rowGap) || 16;
+      const avail = st.clientHeight - cp.offsetHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - gap;
+      const byWidth = ((vw - 172) / 0.82) * (4 / 3);
+      const h = Math.round(Math.max(180, Math.min(avail, byWidth, 400)));
+      if (h !== boxH) {
+        boxH = h;
+        grid.style.setProperty("--box", `${h}px`);
+      }
+    };
+
     const fit = () => {
       const vw = window.innerWidth;
+      sizeMobileBox(vw);
       const sr = sq.getBoundingClientRect();
       const left0 = sr.left - curTx;
       const C = g.C;
@@ -221,6 +239,7 @@ export default function Hero() {
       curTx = tx * cz;
       sq.style.transform = curTx ? `translateX(${curTx}px)` : "";
 
+      // la sombra de contacto desaparece al despegar las capas
       if (shadow.current) shadow.current.style.opacity = String(1 - sm(ff, 0, 0.35));
 
       labels.current.forEach((el, k) => {
@@ -402,26 +421,6 @@ export default function Hero() {
                   sizes="(max-width: 639px) 120px, 260px"
                 />
               </div>
-              {SPARKLES.map((s, i) => (
-                <div
-                  key={i}
-                  className="pop hero__sparkle"
-                  data-reveal="1"
-                  aria-hidden="true"
-                  style={
-                    {
-                      top: s.top,
-                      left: s.left,
-                      width: s.size,
-                      height: s.size,
-                      "--s": `${s.size}px`,
-                      "--delay": `${s.delay}s`,
-                    } as React.CSSProperties
-                  }
-                >
-                  <span className="sparkle hero__star" />
-                </div>
-              ))}
             </div>
           </div>
         </div>

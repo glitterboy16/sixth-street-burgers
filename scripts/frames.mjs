@@ -59,10 +59,14 @@ const ONLY_MANIFEST = arg("only-manifest", "0") === "1";
 // --split N:P parte la banda N del fotograma abierto por la fila P (% del alto) para las etiquetas: las gotas de
 // queso tocan la carne y el matte las ve como una sola banda.
 const SPLITS = process.argv.map((v, i) => (v === "--split" ? process.argv[i + 1] : null)).filter(Boolean).map((s) => s.split(":").map(Number));
+// h = escritorio (el vídeo 2K tal cual), d = móvil de alta densidad (uno de cada dos), m = móvil de baja densidad
 const SIZES = {
-  d: { w: 1080, h: 1440, quality: 76 },
-  m: { w: 720, h: 960, quality: 78 },
+  h: { w: 1440, h: 1920, quality: 80 },
+  d: { w: 1080, h: 1440, quality: 80 },
+  m: { w: 720, h: 960, quality: 80 },
 };
+// --sharpen sigma,m1,m2: máscara de enfoque suave antes de exportar (sharp.sharpen); vacío = sin enfoque
+const SHARPEN = (arg("sharpen", "") || "").split(",").map(Number).filter((v) => !Number.isNaN(v));
 
 const cl = (v, a, b) => (v < a ? a : v > b ? b : v);
 
@@ -147,7 +151,8 @@ for (let i = 0; i < N; i++) {
       : await keyFrame(path.join(SRC, pick[i]), { shadowMax: Number(arg("shadow", 0)), holeLight: Number(arg("holeLight", 4)), holeMin: Number(arg("holeMin", 600)) });
   if (i === 0) closed = k;
   if (i === N - 1) open = k;
-  const base = sharp(k.data, { raw: { width: k.w, height: k.h, channels: 4 } });
+  let base = sharp(k.data, { raw: { width: k.w, height: k.h, channels: 4 } });
+  if (SHARPEN.length === 3) base = base.sharpen({ sigma: SHARPEN[0], m1: SHARPEN[1], m2: SHARPEN[2] });
   const write = (s, idx) =>
     base
       .clone()
@@ -155,6 +160,7 @@ for (let i = 0; i < N; i++) {
       .webp({ quality: SIZES[s].quality, alphaQuality: 90, effort: 5 })
       .toFile(path.join(OUT, s, `frame_${String(idx).padStart(3, "0")}.webp`));
   if (!ONLY_MANIFEST) {
+    await write("h", i);
     await write("d", i);
     if (mobileOf.has(i)) await write("m", mobileOf.get(i));
   }
@@ -213,10 +219,11 @@ const closedBox = {
 fs.writeFileSync(
   MANIFEST,
   `// Generado por scripts/frames.mjs — no editar a mano. Porcentajes respecto al fotograma 3:4.
-export type FrameSize = "d" | "m";
+export type FrameSize = "h" | "d" | "m";
 
 export const ${EXPORT} = {
   sizes: {
+    h: { width: ${SIZES.h.w}, height: ${SIZES.h.h}, count: ${N} },
     d: { width: ${SIZES.d.w}, height: ${SIZES.d.h}, count: ${N} },
     m: { width: ${SIZES.m.w}, height: ${SIZES.m.h}, count: ${NM} },
   },
@@ -232,7 +239,7 @@ export const ${EXPORT} = {
 for (const s of Object.keys(SIZES)) {
   const dir = path.join(OUT, s);
   const total = fs.readdirSync(dir).reduce((acc, f) => acc + fs.statSync(path.join(dir, f)).size, 0);
-  console.log(`frames/${s}: ${s === "d" ? N : NM} × ${SIZES[s].w}×${SIZES[s].h} → ${(total / 1024 / 1024).toFixed(2)} MB`);
+  console.log(`frames/${s}: ${s === "m" ? NM : N} × ${SIZES[s].w}×${SIZES[s].h} → ${(total / 1024 / 1024).toFixed(2)} MB`);
 }
 console.log("cerrada bbox %:", closedBox);
 console.log("bandas cerrada:", bands(closed));

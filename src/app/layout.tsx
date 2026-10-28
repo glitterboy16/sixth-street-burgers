@@ -48,7 +48,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         {/* primer fotograma del hero (LCP): el canvas lo pinta en cuanto llega */}
-        <link rel="preload" as="image" href={`${BASE}/frames/dark/d/frame_000.webp`} />
+        <link rel="preload" as="image" href={`${BASE}/frames/dark/h/frame_000.webp`} />
       </head>
       <body>{children}</body>
     </html>

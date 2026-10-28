@@ -1,8 +1,9 @@
 // Generado por scripts/frames.mjs — no editar a mano. Porcentajes respecto al fotograma 3:4.
-export type FrameSize = "d" | "m";
+export type FrameSize = "h" | "d" | "m";
 
 export const FRAMES_DARK = {
   sizes: {
+    h: { width: 1440, height: 1920, count: 72 },
     d: { width: 1080, height: 1440, count: 72 },
     m: { width: 720, height: 960, count: 36 },
   },
