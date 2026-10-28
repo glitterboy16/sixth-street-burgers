@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Rombo Burger Club</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Yellowtail&family=Alfa+Slab+One&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Hoja de bocetos: cabecera corta, un selector de fondo (los dos temas de la web) y una rejilla de carteles. */
+  :root {
+    --bg: #0b0a09;
+    --fg: #f6f1e7;
+    --muted: #a79b8c;
+    --line: #2b2622;
+    --card: #141210;
+    --red: #ff2e3b;
+    --cheese: #ffc224;
+    --cyan: #3fd7f2;
+    --font-display: "Anton", Impact, "Arial Narrow", sans-serif;
+    --font-body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    color-scheme: dark;
+  }
+  body { background: var(--bg); color: var(--fg); font-family: var(--font-body); margin: 0; line-height: 1.5; }
+  .wrap {
+    max-width: 1280px; margin: 0 auto;
+    padding-block: 28px 72px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  header { display: grid; gap: 14px; margin-bottom: 26px; }
+  .eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(44px, 7vw, 84px); line-height: 0.92; margin: 0; text-transform: uppercase; letter-spacing: 0.01em; text-wrap: balance; }
+  h1 em { font-style: normal; color: var(--red); }
+  .lead { max-width: 62ch; margin: 0; color: var(--fg); font-size: 17px; }
+  .lead b { font-weight: 600; }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-top: 6px; }
+  .bar span { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 3px; background: var(--card); }
+  .seg button { font: 500 13px var(--font-body); color: var(--fg); background: transparent; border: 0; border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+  .seg button:focus-visible { outline: 2px solid var(--cheese); outline-offset: 2px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 26px; }
+  .card { border: 1px solid var(--line); background: var(--card); border-radius: 10px; overflow: hidden; display: grid; grid-template-rows: auto 1fr; }
+  .stage { padding: 26px 22px; transition: background-color 0.25s; display: grid; place-items: center; }
+  .stage[data-bg="dark"] { background: #0b0a09; }
+  .stage[data-bg="light"] { background: #f6f1e7; }
+  .stage svg { width: 100%; max-width: 560px; height: auto; display: block; overflow: visible; }
+  .meta { padding: 16px 18px 18px; display: grid; gap: 6px; border-top: 1px solid var(--line); }
+  .meta .n { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cheese); }
+  .meta h2 { font-family: var(--font-display); font-weight: 400; font-size: 26px; letter-spacing: 0.02em; margin: 0; text-transform: uppercase; }
+  .meta p { margin: 0; color: var(--muted); font-size: 14px; }
+  .meta p b { color: var(--fg); font-weight: 500; }
+
+  .notes { margin-top: 44px; display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .note { border-top: 1px solid var(--line); padding-top: 14px; }
+  .note h3 { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cheese); margin: 0 0 8px; font-weight: 500; }
+  .note p { margin: 0; color: var(--muted); font-size: 14px; max-width: 48ch; }
+  .note p b { color: var(--fg); font-weight: 500; }
+
+  /* tipografías del cartel */
+  .t-welcome { font-family: "Alfa Slab One", "Rockwell", serif; }
+  .t-script { font-family: "Yellowtail", "Brush Script MT", cursive; }
+  .t-block { font-family: var(--font-display); }
+  @media (prefers-reduced-motion: no-preference) {
+    .stage svg .flick { animation: flick 7s steps(1) infinite; }
+    @keyframes flick { 0%, 100% { opacity: 1; } 61% { opacity: 1; } 61.4% { opacity: 0.35; } 61.9% { opacity: 1; } 62.8% { opacity: 0.6; } 63.3% { opacity: 1; } }
+  }
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Sixth Street Burgers · bocetos del rombo · referencia: el cartel físico del local</div>
+    <h1>Rombo <em>Burger Club</em></h1>
+    <p class="lead">
+      Seis lecturas del mismo rombo, sin la estrella de arriba. Todas conservan lo que hace reconocible al cartel:
+      <b>el borde de bombillas</b>, las <b>siete fichas de WELCOME</b>, el <b>"to Fabulous"</b> en tubo fino, el bloque
+      <b>SIXTH STREET</b> en amarillo y <b>BURGER CLUB</b> en rojo. Cambian el material y la luz. Cada uno está pensado
+      para un sitio distinto de la web; se pueden mezclar.
+    </p>
+    <div class="bar">
+      <span>Ver sobre</span>
+      <div class="seg" role="group" aria-label="Fondo de previsualización">
+        <button type="button" data-bg="dark" aria-pressed="true">Tema oscuro</button>
+        <button type="button" data-bg="light" aria-pressed="false">Tema claro</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="grid" id="grid"></div>
+
+  <section class="notes" aria-label="Notas de construcción">
+    <div class="note">
+      <h3>Cómo está hecho el tubo</h3>
+      <p>Cada letra de neón son tres capas: un <b>halo</b> difuso del color del gas, el <b>tubo</b> saturado y un
+        <b>núcleo</b> casi blanco. Así se lee encendido sin inventar luz: el brillo nace del propio tubo, no del fondo.</p>
+    </div>
+    <div class="note">
+      <h3>Qué se conserva del cartel</h3>
+      <p>Proporción del rombo (más ancho que alto), fichas blancas con letra roja, caligrafía cian, bloque amarillo con
+        perfil y las bombillas en cadencia regular por todo el borde. La estrella superior queda fuera.</p>
+    </div>
+    <div class="note">
+      <h3>Dónde iría cada uno</h3>
+      <p><b>01 y 04</b> en el hero y en el pie (modo oscuro). <b>02 y 06</b> sobre papel (modo claro). <b>03</b> como pegatina,
+        sello y favicon. <b>05</b> para merchandising y para la tarjeta del local.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+  // Geometría común del rombo (viewBox 640×440): más ancho que alto, como el cartel.
+  const CX = 320, CY = 220, A = 306, B = 206;
+  const pt = (k, which) => ({
+    top: [CX, CY - B * k], right: [CX + A * k, CY], bottom: [CX, CY + B * k], left: [CX - A * k, CY],
+  })[which];
+  const diamond = (k) => `M${pt(k, "top")} L${pt(k, "right")} L${pt(k, "bottom")} L${pt(k, "left")} Z`;
+  const bulbs = (k, perEdge) => {
+    const corners = [pt(k, "top"), pt(k, "right"), pt(k, "bottom"), pt(k, "left")];
+    const out = [];
+    for (let e = 0; e < 4; e++) {
+      const [x0, y0] = corners[e], [x1, y1] = corners[(e + 1) % 4];
+      for (let i = 0; i < perEdge; i++) {
+        const t = (i + 0.5) / perEdge;
+        out.push([x0 + (x1 - x0) * t, y0 + (y1 - y0) * t]);
+      }
+    }
+    return out;
+  };
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+
+  // Texto de neón: halo difuso + tubo + núcleo. Con glow=false es pintura plana.
+  function neon(id, x, y, text, o) {
+    const common = `x="${x}" y="${y}" text-anchor="middle" class="${o.cls}" font-size="${o.size}" letter-spacing="${o.ls || 0}"`;
+    const halo = o.glow
+      ? `<text ${common} fill="${o.glow}" stroke="${o.glow}" stroke-width="${o.haloW || 7}" filter="url(#${id}-blur)" opacity="${o.haloA || 0.8}">${esc(text)}</text>`
+      : "";
+    const stroke = o.stroke ? `stroke="${o.stroke}" stroke-width="${o.strokeW || 1.6}" paint-order="stroke" stroke-linejoin="round"` : "";
+    return `<g class="${o.flick ? "flick" : ""}">${halo}<text ${common} fill="${o.fill}" ${stroke}>${esc(text)}</text></g>`;
+  }
+
+  function sign(v) {
+    const id = v.id;
+    const bulbPts = bulbs(0.9, 13);
+    const bulbSvg = bulbPts.map(([x, y]) => {
+      const halo = v.bulb.glow ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="9" fill="${v.bulb.glow}" opacity="0.55" filter="url(#${id}-blur)"/>` : "";
+      return `${halo}<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${v.bulb.r || 4.2}" fill="${v.bulb.fill}" stroke="${v.bulb.stroke || "none"}" stroke-width="1"/>`;
+    }).join("");
+
+    // fichas de WELCOME
+    const letters = "WELCOME".split("");
+    const chips = letters.map((L, i) => {
+      const x = CX + (i - 3) * 44, y = 120;
+      const halo = v.chip.glow ? `<circle cx="${x}" cy="${y}" r="19" fill="${v.chip.glow}" opacity="0.5" filter="url(#${id}-blur)"/>` : "";
+      return `${halo}<circle cx="${x}" cy="${y}" r="18" fill="${v.chip.fill}" stroke="${v.chip.stroke}" stroke-width="${v.chip.strokeW || 2}"/>
+        <text x="${x}" y="${y + 7}" text-anchor="middle" class="t-welcome" font-size="19" fill="${v.chip.letter}">${L}</text>`;
+    }).join("");
+
+    const panel = v.panel
+      ? `<path d="${diamond(1)}" fill="${v.panel.fill}" stroke="${v.panel.fill}" stroke-width="22" stroke-linejoin="round"/>
+         ${v.panel.frame ? `<path d="${diamond(1)}" fill="none" stroke="${v.panel.frame}" stroke-width="${v.panel.frameW || 8}" stroke-linejoin="round"/>` : ""}
+         ${v.panel.inner ? `<path d="${diamond(0.955)}" fill="none" stroke="${v.panel.inner}" stroke-width="2" stroke-linejoin="round" opacity="0.7"/>` : ""}`
+      : "";
+    const tube = v.tube
+      ? `<path d="${diamond(0.97)}" fill="none" stroke="${v.tube.glow}" stroke-width="12" stroke-linejoin="round" filter="url(#${id}-blur)" opacity="0.7"/>
+         <path d="${diamond(0.97)}" fill="none" stroke="${v.tube.color}" stroke-width="4" stroke-linejoin="round"/>
+         <path d="${diamond(0.97)}" fill="none" stroke="${v.tube.core}" stroke-width="1.4" stroke-linejoin="round"/>`
+      : "";
+    const enamel = v.enamel
+      ? `<path d="${diamond(0.93)}" fill="url(#${id}-gloss)"/>
+         <path d="${diamond(1)}" fill="none" stroke="url(#${id}-gold)" stroke-width="10" stroke-linejoin="round"/>`
+      : "";
+    const defs = `
+      <filter id="${id}-blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${v.blur || 4}"/></filter>
+      <filter id="${id}-rough" x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="7" result="n"/>
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+      <linearGradient id="${id}-gloss" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#ffffff" stop-opacity="0.22"/><stop offset="0.48" stop-color="#ffffff" stop-opacity="0.06"/>
+        <stop offset="0.5" stop-color="#000000" stop-opacity="0.08"/><stop offset="1" stop-color="#000000" stop-opacity="0.28"/>
+      </linearGradient>
+      <linearGradient id="${id}-gold" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#f3d27a"/><stop offset="0.5" stop-color="#9c7a2a"/><stop offset="1" stop-color="#f7e3a0"/>
+      </linearGradient>`;
+    const body = `
+      ${panel}${enamel}${tube}
+      ${bulbSvg}
+      ${chips}
+      ${neon(id, CX, 178, "to Fabulous", { cls: "t-script", size: 44, fill: v.script.fill, stroke: v.script.stroke, strokeW: 1.2, glow: v.script.glow, haloW: 5, flick: v.flick })}
+      ${neon(id, CX, 262, "SIXTH STREET", { cls: "t-block", size: 84, ls: 2, fill: v.main.fill, stroke: v.main.stroke, strokeW: 2.2, glow: v.main.glow, haloW: 8 })}
+      ${neon(id, CX, 322, "BURGER CLUB", { cls: "t-block", size: 38, ls: 6, fill: v.club.fill, stroke: v.club.stroke, strokeW: 1.4, glow: v.club.glow, haloW: 5 })}`;
+    return `<svg viewBox="0 0 640 440" role="img" aria-label="Rombo ${esc(v.name)}"><defs>${defs}</defs>
+      <g ${v.rough ? `filter="url(#${id}-rough)"` : ""}>${body}</g></svg>`;
+  }
+
+  const V = [
+    {
+      id: "v1", n: "01", name: "Noche · réplica fiel",
+      note: "<b>Hero y pie en modo oscuro.</b> Panel azul noche, bombillas encendidas y los tres tubos con halo. Es el cartel tal cual, de noche.",
+      panel: { fill: "#121a36", frame: "#2b3358", inner: "#3a4474" },
+      bulb: { fill: "#fff1b8", glow: "#ffb800" },
+      chip: { fill: "#f7f1e4", stroke: "#ff2e3b", letter: "#e3192a", glow: "#ff6b74" },
+      script: { fill: "#dffbff", stroke: "#3fd7f2", glow: "#19c3e6" },
+      main: { fill: "#ffc224", stroke: "#fff0b3", glow: "#ffb000" },
+      club: { fill: "#ffd3d6", stroke: "#ff2e3b", glow: "#ff2e3b" },
+      flick: true,
+    },
+    {
+      id: "v2", n: "02", name: "Tubo apagado · de día",
+      note: "<b>Modo claro, sobre papel.</b> Mismo cartel con los tubos sin encender: pintura, vidrio pálido, marco de chapa. Realismo sin luz.",
+      panel: { fill: "#1b2340", frame: "#8a8f99", frameW: 10, inner: "#3a4262" },
+      bulb: { fill: "#e9dcaa", stroke: "#b9a86a", r: 4.4 },
+      chip: { fill: "#f1ebe0", stroke: "#c9c2b4", letter: "#c8262f" },
+      script: { fill: "none", stroke: "#8fd3df" },
+      main: { fill: "#d5aa3c", stroke: "#8c6c1e" },
+      club: { fill: "none", stroke: "#e07b82" },
+    },
+    {
+      id: "v3", n: "03", name: "Brutalista · dos tintas",
+      note: "<b>Pegatina, sello y favicon.</b> Tinta, amarillo y rojo planos, sin halo. Aguanta en 24 px y en una serigrafía.",
+      panel: { fill: "#0b0a09", frame: "#ffc224", frameW: 6 },
+      bulb: { fill: "#ffc224", r: 4.6 },
+      chip: { fill: "#ffc224", stroke: "#0b0a09", strokeW: 1.5, letter: "#0b0a09" },
+      script: { fill: "#ffc224" },
+      main: { fill: "#ffc224", stroke: "#0b0a09", strokeW: 2 },
+      club: { fill: "#ff2e3b" },
+    },
+    {
+      id: "v4", n: "04", name: "Solo neón",
+      note: "<b>Flotando sobre el fondo oscuro del hero.</b> Sin panel: el propio rombo es un tubo amarillo con las bombillas, y el texto va en el aire.",
+      tube: { color: "#ffc224", core: "#fff4c2", glow: "#ffb000" },
+      bulb: { fill: "#fff1b8", glow: "#ffb800", r: 3.8 },
+      chip: { fill: "none", stroke: "#ff2e3b", letter: "#ff6b74", glow: "#ff2e3b" },
+      script: { fill: "#dffbff", stroke: "#3fd7f2", glow: "#19c3e6" },
+      main: { fill: "#ffe38a", stroke: "#ffc224", glow: "#ffb000" },
+      club: { fill: "#ffd3d6", stroke: "#ff2e3b", glow: "#ff2e3b" },
+      flick: true,
+    },
+    {
+      id: "v5", n: "05", name: "Chapa esmaltada",
+      note: "<b>Merchandising y tarjeta del local.</b> Esmalte con brillo de barniz y borde dorado; las bombillas son puntos de esmalte amarillo.",
+      panel: { fill: "#121a36" },
+      enamel: true,
+      bulb: { fill: "#ffd35a", stroke: "#8c6c1e" },
+      chip: { fill: "#f7f1e4", stroke: "#9c7a2a", strokeW: 1.5, letter: "#e3192a" },
+      script: { fill: "#3fd7f2", stroke: "#1a7f8f", strokeW: 0.8 },
+      main: { fill: "#ffc224", stroke: "#8c6c1e", strokeW: 2 },
+      club: { fill: "#ff2e3b", stroke: "#7a1016", strokeW: 1 },
+    },
+    {
+      id: "v6", n: "06", name: "Sello de tinta",
+      note: "<b>Papel, tickets y bolsas.</b> Una sola tinta roja con el borde algo roto, como un tampón; para el modo claro y para imprimir.",
+      panel: { fill: "none", frame: "#d81f2a", frameW: 7 },
+      bulb: { fill: "#d81f2a", r: 4 },
+      chip: { fill: "none", stroke: "#d81f2a", strokeW: 2.5, letter: "#d81f2a" },
+      script: { fill: "#d81f2a" },
+      main: { fill: "none", stroke: "#d81f2a", strokeW: 3 },
+      club: { fill: "#d81f2a" },
+      rough: true,
+    },
+  ];
+
+  const grid = document.getElementById("grid");
+  grid.innerHTML = V.map((v) => `
+    <article class="card">
+      <div class="stage" data-bg="dark">${sign(v)}</div>
+      <div class="meta"><div class="n">Boceto ${v.n}</div><h2>${v.name}</h2><p>${v.note}</p></div>
+    </article>`).join("");
+
+  const buttons = [...document.querySelectorAll(".seg button")];
+  const setBg = (bg) => {
+    document.querySelectorAll(".stage").forEach((s) => (s.dataset.bg = bg));
+    buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.bg === bg)));
+    try { localStorage.setItem("rombo-bg", bg); } catch (e) {}
+  };
+  buttons.forEach((b) => b.addEventListener("click", () => setBg(b.dataset.bg)));
+  try { const saved = localStorage.getItem("rombo-bg"); if (saved === "light" || saved === "dark") setBg(saved); } catch (e) {}
+</script>
+
+</body>
+</html>
