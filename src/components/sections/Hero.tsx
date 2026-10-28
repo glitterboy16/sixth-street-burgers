@@ -5,7 +5,6 @@ import Image from "next/image";
 import { FRAMES, type FrameSize } from "@/data/frames";
 import { heroLabels, site } from "@/data/site";
 import { onScroll, prefersReducedMotion, sm, stageProgress } from "@/lib/motion";
-import WelcomeBadge from "@/components/kit/WelcomeBadge";
 import Corner from "@/components/kit/Corner";
 import TodayHours from "@/components/kit/TodayHours";
 
@@ -13,6 +12,7 @@ import TodayHours from "@/components/kit/TodayHours";
 // scripts/frames.mjs. El scroll elige el fotograma (0 = cerrada, N-1 = abierta) y lo pinta en un canvas,
 // sin fundidos entre vecinos (emborronan las capas en movimiento).
 const MAX_SCALE = 1.7; // escala de la caja con la hamburguesa cerrada: ocupa casi todo el escenario
+const TEXT_GAP = 24; // px de aire entre el texto y la hamburguesa cerrada: nunca se pisan
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 const C = FRAMES.closed;
@@ -33,14 +33,30 @@ const LABEL_Y: number[] = (() => {
   return Array.from({ length: n }, (_, i) => top + ((bottom - top) * i) / (n - 1));
 })();
 
+// Estrellas de neón rojo alrededor de la hamburguesa: en las esquinas del fotograma (libres tanto cerrada
+// como abierta) y nunca sobre el margen izquierdo, que puede quedar bajo el texto. Tamaños distintos, sin
+// exagerar; brillo de neón fijo, sin parpadeo.
+const SPARKLES = [
+  { top: "4%", left: "44%", size: 26, delay: 0.2 },
+  { top: "0%", left: "24%", size: 16, delay: 0.3 },
+  { top: "3%", left: "76%", size: 20, delay: 0.25 },
+  { top: "74%", left: "92%", size: 14, delay: 0.4 },
+  { top: "95%", left: "26%", size: 18, delay: 0.35 },
+  { top: "96%", left: "74%", size: 30, delay: 0.45 },
+];
+
 export default function Hero() {
   const section = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
+  const copy = useRef<HTMLDivElement>(null);
+  const square = useRef<HTMLDivElement>(null);
   const box = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const shadow = useRef<HTMLDivElement>(null);
   const titleA = useRef<HTMLHeadingElement>(null);
   const titleB = useRef<HTMLParagraphElement>(null);
+  const lead = useRef<HTMLParagraphElement>(null);
+  const actions = useRef<HTMLDivElement>(null);
   const cue = useRef<HTMLParagraphElement>(null);
   const labels = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -48,8 +64,9 @@ export default function Hero() {
     const sec = section.current,
       st = stage.current,
       bx = box.current,
+      sq = square.current,
       cv = canvas.current;
-    if (!sec || !st || !bx || !cv) return;
+    if (!sec || !st || !bx || !sq || !cv) return;
     const ctx = cv.getContext("2d");
     if (!ctx) return;
 
@@ -69,6 +86,7 @@ export default function Hero() {
     let p = target;
     let raf = 0;
     let last = 0;
+    let scaleMax = SCALE;
 
     // fotograma cargado más cercano a i (mientras se descargan)
     const near = (i: number) => {
@@ -77,6 +95,38 @@ export default function Hero() {
         if (frames[i + d]) return i + d;
       }
       return -1;
+    };
+
+    // Borde derecho real del texto (no de sus cajas, que ocupan toda la columna).
+    const textRight = () => {
+      let r = -Infinity;
+      const range = document.createRange();
+      for (const el of [titleA.current, titleB.current, lead.current]) {
+        if (!el) continue;
+        range.selectNodeContents(el);
+        r = Math.max(r, range.getBoundingClientRect().right);
+      }
+      const btn = actions.current?.lastElementChild;
+      if (btn) r = Math.max(r, btn.getBoundingClientRect().right);
+      return r;
+    };
+
+    // Zoom máximo de la cerrada: en escritorio, el que deja la hamburguesa a TEXT_GAP del texto. El borde
+    // izquierdo de la cerrada está al C.x[0] % del fotograma y la caja escala desde su centro horizontal.
+    const fit = () => {
+      if (window.innerWidth < 640) {
+        scaleMax = Math.min(SCALE, 1.3); // la caja arranca en el margen izquierdo: con menos zoom no se sale
+        return;
+      }
+      const sr = sq.getBoundingClientRect();
+      const tr = textRight();
+      if (!Number.isFinite(tr) || tr <= sr.left - TEXT_GAP) {
+        scaleMax = SCALE;
+        return;
+      }
+      const x0 = C.x[0] / 100;
+      const limit = (tr + TEXT_GAP - sr.left) / sr.width; // borde que no puede cruzar, en fracción de la caja
+      scaleMax = Math.max(1, Math.min(SCALE, (0.5 - limit) / (0.5 - x0)));
     };
 
     const draw = () => {
@@ -94,8 +144,6 @@ export default function Hero() {
 
       // zoom y subida de la caja solo en el último tramo del cierre, cuando las capas ya casi se tocan
       const cz = sm(cl, 0.45, 1);
-      // en móvil la caja arranca en el margen izquierdo: con menos zoom la cerrada no se sale de pantalla
-      const scaleMax = window.innerWidth < 640 ? Math.min(SCALE, 1.3) : SCALE;
       const sc = 1 + (scaleMax - 1) * cz;
       const sh = LIFT * cz;
       bx.style.transform = `translateY(${sh * S}px) scale(${sc})`;
@@ -135,6 +183,7 @@ export default function Hero() {
       raf = requestAnimationFrame(tick);
     };
     const update = () => {
+      fit();
       target = stageProgress(sec, st);
       if (!raf) raf = requestAnimationFrame(tick);
     };
@@ -173,7 +222,15 @@ export default function Hero() {
     };
     for (let k = 0; k < 6; k++) pump();
 
-    const offScroll = rm ? (draw(), () => {}) : onScroll(update);
+    // las fuentes cambian el ancho del texto: reajusta el zoom cuando terminan de cargar
+    document.fonts?.ready.then(() => {
+      if (!disposed) {
+        fit();
+        draw();
+      }
+    });
+
+    const offScroll = rm ? (fit(), draw(), () => {}) : onScroll(update);
     return () => {
       disposed = true;
       if (raf) cancelAnimationFrame(raf);
@@ -194,7 +251,7 @@ export default function Hero() {
         </p>
 
         <div className="hero__grid">
-          <div className="hero__copy">
+          <div ref={copy} className="hero__copy">
             <div className="hero__titles hero__in" style={{ "--i": 0 } as React.CSSProperties}>
               <h1 ref={titleA} className="display">
                 MUERDE
@@ -207,10 +264,10 @@ export default function Hero() {
                 AL MOMENTO.
               </p>
             </div>
-            <p className="lead hero__in" style={{ "--i": 1 } as React.CSSProperties}>
+            <p ref={lead} className="lead hero__in" style={{ "--i": 1 } as React.CSSProperties}>
               Smash burgers a la plancha. Un diner americano de noche, en Lanzarote.
             </p>
-            <div className="hero__actions hero__in" style={{ "--i": 2 } as React.CSSProperties}>
+            <div ref={actions} className="hero__actions hero__in" style={{ "--i": 2 } as React.CSSProperties}>
               <a href="#carta" className="btn btn--primary">
                 Ver la carta
               </a>
@@ -221,7 +278,7 @@ export default function Hero() {
           </div>
 
           <div className="hero__scene hero__in" style={{ "--i": 1 } as React.CSSProperties}>
-            <div className="hero__square">
+            <div ref={square} className="hero__square">
               <div ref={box} className="hero__box" style={{ transformOrigin: `50% ${CY}%` }}>
                 <div
                   ref={shadow}
@@ -261,8 +318,17 @@ export default function Hero() {
                   sizes="(max-width: 639px) 120px, 260px"
                 />
               </div>
-              <WelcomeBadge className="hero__sticker-badge" reveal />
-              <div className="sparkle pop hero__sparkle" data-reveal="1" aria-hidden="true" />
+              {SPARKLES.map((s, i) => (
+                <div
+                  key={i}
+                  className="pop hero__sparkle"
+                  data-reveal="1"
+                  aria-hidden="true"
+                  style={{ top: s.top, left: s.left, width: s.size, height: s.size, "--delay": `${s.delay}s` } as React.CSSProperties}
+                >
+                  <span className="sparkle hero__star" />
+                </div>
+              ))}
             </div>
           </div>
         </div>

@@ -143,7 +143,8 @@
 .hero__grid {
   /* --box es el ALTO de la escena: casi todo el escenario. La caja de la hamburguesa es 3:4 (ancho =
      0,75 × alto) como los fotogramas. En escritorio la escena va absoluta a la derecha y el texto puede
-     entrar bajo el margen transparente del fotograma (la hamburguesa empieza al 24 % de su ancho). */
+     entrar bajo el margen transparente del fotograma (la hamburguesa cerrada empieza al 14 % de su ancho:
+     el texto solo puede usar el 8 %). */
   --box: min(calc(100svh - var(--nav-h) - 48px), 58vw, 1000px);
   --frame-w: calc(var(--box) * 0.75);
   --labels: clamp(160px, 13vw, 200px);
@@ -156,9 +157,11 @@
   padding: 56px var(--gutter);
 }
 .hero__copy {
+  position: relative;
+  z-index: 9; /* el texto siempre por encima de la hamburguesa y sus adornos */
   flex: 1 1 240px;
   min-width: 0;
-  max-width: calc(100% - var(--frame-w) - var(--labels) + var(--frame-w) * 0.22);
+  max-width: calc(100% - var(--frame-w) - var(--labels) + var(--frame-w) * 0.08);
   display: flex;
   flex-direction: column;
   gap: clamp(18px, 3vh, 32px);
@@ -300,34 +303,26 @@
   width: 100%;
   height: auto;
 }
-.hero__sticker-badge {
+/* Estrellas de neón rojo fijo (el mismo brillo que las letras del logo, sin parpadeo): el pop de entrada va en
+   el contenedor y el brillo en la estrella de dentro. */
+.hero__sparkle {
   position: absolute;
-  bottom: 3%;
-  left: -14%;
-  width: 42%;
-  min-width: 132px;
   z-index: 8;
   pointer-events: none;
-  --from: scale(0.8) rotate(-6deg);
-  --to: rotate(8deg);
-  --delay: 0.1s;
-}
-.hero__sparkle {
-  top: 4%;
-  left: 44%;
-  width: 26px;
-  height: 26px;
-  background: var(--red);
-  z-index: 8;
   --from: scale(0.4);
   --to: none;
-  --delay: 0.2s;
+}
+.hero__star {
+  inset: 0;
+  background: var(--red);
+  filter: drop-shadow(0 0 3px rgba(255, 46, 59, 0.95)) drop-shadow(0 0 10px rgba(255, 46, 59, 0.6));
+}
+:root[data-theme="light"] .hero__star {
+  filter: drop-shadow(0 0 2px rgba(255, 46, 59, 0.6)) drop-shadow(0 0 8px rgba(255, 46, 59, 0.35));
 }
 @media (max-width: 639px) {
-  /* en móvil la hamburguesa va sola: los adornos taparían el texto o el pan */
-  .hero__square .hero__sticker-smash,
-  .hero__square .hero__sticker-badge,
-  .hero__square .hero__sparkle {
+  /* en móvil la hamburguesa va sola: el sello taparía el texto o el pan */
+  .hero__square .hero__sticker-smash {
     display: none;
   }
 }
