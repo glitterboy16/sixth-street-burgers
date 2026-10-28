@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Image from "next/image";
 import { FRAMES, type FrameSize } from "@/data/frames";
 import { FRAMES_DARK } from "@/data/frames-dark";
 import { heroLabels, site } from "@/data/site";
@@ -72,7 +71,6 @@ export default function Hero() {
   const box = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const shadow = useRef<HTMLDivElement>(null);
-  const sticker = useRef<HTMLDivElement>(null);
   const titleA = useRef<HTMLHeadingElement>(null);
   const titleB = useRef<HTMLParagraphElement>(null);
   const lead = useRef<HTMLParagraphElement>(null);
@@ -352,8 +350,9 @@ export default function Hero() {
     };
 
     const draw = () => {
-      // ff: 1 = abierta, 0 = cerrada. Campana: cerrada → abierta (meseta 0,44-0,56) → cerrada.
-      const ff = sm(p, 0.04, 0.44) * (1 - sm(p, 0.56, 0.96));
+      // ff: 1 = abierta, 0 = cerrada. Solo ida: se abre con el scroll y se queda abierta hasta el final
+      // (p 0,84-1), sin volver a cerrarse: el usuario ve el despiece quieto y sigue bajando.
+      const ff = sm(p, 0.04, 0.84);
 
       const i = near(Math.round(ff * (cur.n - 1)));
       if (i >= 0) {
@@ -380,19 +379,6 @@ export default function Hero() {
 
       // la sombra de contacto desaparece al despegar las capas
       if (shadow.current) shadow.current.style.opacity = String(1 - sm(ff, 0, 0.35));
-      // móvil: el sello SMASH solo con la hamburguesa cerrada (principio y final): se encoge y se funde en cuanto
-      // las capas empiezan a separarse, y vuelve a asomar al cerrarse
-      const stk = sticker.current;
-      if (stk) {
-        if (isMobile) {
-          const a = 1 - sm(ff, 0.03, 0.2);
-          stk.style.opacity = String(a);
-          stk.style.transform = `rotate(${7 + 14 * (1 - a)}deg) scale(${0.6 + 0.4 * a})`;
-        } else if (stk.style.opacity) {
-          stk.style.opacity = "";
-          stk.style.transform = "";
-        }
-      }
 
       labels.current.forEach((el, k) => {
         if (!el) return;
@@ -404,7 +390,7 @@ export default function Hero() {
         el.style.transform = `translate3d(${16 * (1 - a)}px, ${y * S}px, 0) translateY(-50%)`;
       });
 
-      const h = sm(p, 0.3, 0.42);
+      const h = sm(p, 0.56, 0.8);
       if (titleA.current) titleA.current.style.transform = `translateY(${-110 * h}%)`;
       if (titleB.current) titleB.current.style.transform = `translateY(${110 * (1 - h)}%)`;
       if (cue.current) cue.current.style.opacity = String(1 - sm(p, 0, 0.08));
@@ -591,16 +577,6 @@ export default function Hero() {
                   <span className="callout__text">{t}</span>
                 </div>
               ))}
-
-              <div ref={sticker} className="pop hero__sticker-smash" data-reveal="1" aria-hidden="true">
-                <Image
-                  src="/images/sello-smash.webp"
-                  alt=""
-                  width={600}
-                  height={629}
-                  sizes="(max-width: 639px) 120px, 260px"
-                />
-              </div>
             </div>
           </div>
 

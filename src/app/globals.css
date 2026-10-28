@@ -285,11 +285,6 @@ svg {
   clip-path: polygon(50% 0%, 58% 42%, 100% 50%, 58% 58%, 50% 100%, 42% 58%, 0% 50%, 42% 42%);
   pointer-events: none;
 }
-.bolt {
-  position: absolute;
-  clip-path: polygon(58% 0%, 18% 56%, 44% 56%, 36% 100%, 84% 38%, 56% 38%);
-  pointer-events: none;
-}
 .checker {
   height: 16px;
   background: conic-gradient(var(--red) 0 25%, transparent 0 50%, var(--red) 0 75%, transparent 0) 0 0 /

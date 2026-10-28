@@ -59,10 +59,7 @@ export default function Products() {
                     </>
                   )}
                   {k === 1 && (
-                    <>
-                      <div className="sparkle" style={{ top: 0, left: "2%", width: 28, height: 28, background: "var(--red)" }} aria-hidden="true" />
-                      <div className="bolt" style={{ top: "8%", right: "-6%", width: 30, height: 46, background: "var(--ink)" }} aria-hidden="true" />
-                    </>
+                    <div className="sparkle" style={{ top: 0, left: "2%", width: 28, height: 28, background: "var(--red)" }} aria-hidden="true" />
                   )}
                   {k === 2 && (
                     <div className="sparkle" style={{ bottom: "2%", right: 0, width: 28, height: 28, background: "var(--teal)" }} aria-hidden="true" />

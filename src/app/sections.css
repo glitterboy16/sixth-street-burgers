@@ -154,7 +154,7 @@
 /* ===== 01 Hero ===== */
 .hero {
   position: relative;
-  height: 340vh;
+  height: 230vh;
   background: var(--bg);
   transition: background-color 0.35s;
 }
@@ -369,37 +369,6 @@
 @media (max-width: 899px) {
   .hero__label {
     left: 82%;
-  }
-}
-/* Adornos: al margen izquierdo del fotograma (transparente hasta el 24 % del ancho), lejos de las etiquetas */
-.hero__sticker-smash {
-  position: absolute;
-  top: -2%;
-  left: -18%;
-  width: 38%;
-  min-width: 96px;
-  z-index: 8;
-  pointer-events: none;
-  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35));
-  --from: scale(0.8) rotate(-22deg);
-  --to: rotate(-10deg);
-}
-.hero__sticker-smash img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-@media (max-width: 639px) {
-  /* en móvil el sello va arriba a la derecha de la hamburguesa y solo se ve con ella cerrada: el JS le pone la
-     opacidad según el scroll (1 cerrada → 0 abierta), por eso aquí solo transiciona el transform */
-  .hero__square .hero__sticker-smash {
-    top: -1%;
-    left: auto;
-    right: -7%;
-    width: 40%;
-    min-width: 100px;
-    transition: none; /* el JS lo gira, lo escala y lo funde fotograma a fotograma */
-    will-change: transform, opacity;
   }
 }
 
