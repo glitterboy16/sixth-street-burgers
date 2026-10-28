@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     // para que las apps no sigan mostrando la versión que tienen en caché
     images: [
       {
-        url: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/images/og-v2.jpg`,
+        url: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/images/og-v3.jpg`,
         width: 1200,
         height: 630,
         alt: "Sixth Street Burger Club: Muerde fuerte. Smash burger doble con cheddar, lechuga y tomate.",
