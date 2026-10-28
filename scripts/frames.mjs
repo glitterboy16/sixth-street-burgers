@@ -71,8 +71,11 @@ const SHARPEN = (arg("sharpen", "") || "").split(",").map(Number).filter((v) => 
 const cl = (v, a, b) => (v < a ? a : v > b ? b : v);
 
 if (!ONLY_MANIFEST) {
-  fs.rmSync(OUT, { recursive: true, force: true });
-  for (const s of Object.keys(SIZES)) fs.mkdirSync(path.join(OUT, s), { recursive: true });
+  // solo las subcarpetas de tamaños: public/frames contiene también public/frames/dark (el otro tema)
+  for (const s of Object.keys(SIZES)) {
+    fs.rmSync(path.join(OUT, s), { recursive: true, force: true });
+    fs.mkdirSync(path.join(OUT, s), { recursive: true });
+  }
 }
 fs.mkdirSync(IMG, { recursive: true });
 
