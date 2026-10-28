@@ -1,11 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Anton, Geist, Geist_Mono } from "next/font/google";
+import { Alfa_Slab_One, Anton, Geist, Geist_Mono, Yellowtail } from "next/font/google";
 import { site } from "@/data/site";
 import "./globals.css";
 import "./sections.css";
 
 const anton = Anton({ weight: "400", subsets: ["latin"], variable: "--font-anton", display: "swap" });
 const geist = Geist({ weight: ["400", "500"], subsets: ["latin"], variable: "--font-geist", display: "swap" });
+// tipografías del rombo del cartel (WelcomeBadge): caligrafía de "to Fabulous" y letra de las fichas WELCOME
+const yellowtail = Yellowtail({ weight: "400", subsets: ["latin"], variable: "--font-yellowtail", display: "swap" });
+const alfa = Alfa_Slab_One({ weight: "400", subsets: ["latin"], variable: "--font-alfa", display: "swap" });
 const geistMono = Geist_Mono({
   weight: ["400", "500"],
   subsets: ["latin"],
@@ -43,7 +46,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="es"
       data-theme="dark"
       suppressHydrationWarning
-      className={`${anton.variable} ${geist.variable} ${geistMono.variable}`}
+      className={`${anton.variable} ${geist.variable} ${geistMono.variable} ${yellowtail.variable} ${alfa.variable}`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />

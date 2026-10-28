@@ -41,7 +41,7 @@ export default function Venue() {
               height={2048}
               sizes="(max-width: 640px) 90vw, 440px"
             />
-            <WelcomeBadge className="venue__badge" reveal />
+            <WelcomeBadge className="venue__badge" id="rombo-venue" reveal />
             {/* segunda foto, pinchada encima como una polaroid: la mesa con amigos */}
             <div className="venue__extra" data-reveal="1">
               <Image

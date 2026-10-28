@@ -473,6 +473,34 @@
   --ease: var(--ease-pop);
   --delay: 0.2s;
 }
+/* El rombo a plano completo. La sección es roja: en el tema claro el sello va en tinta papel; en el oscuro el
+   neón necesita una placa negra detrás (un cartel colgado en la pared roja), el tubo no luce sobre rojo. */
+.choose__badge {
+  flex: 0 1 clamp(260px, 34vw, 500px);
+  min-width: 240px;
+  --from: scale(0.85) rotate(-4deg);
+  --to: rotate(-3deg);
+  --delay: 0.15s;
+}
+.choose__badge::before {
+  content: "";
+  position: absolute;
+  inset: -3% -1.5%;
+  background: var(--ink);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+:root[data-theme="light"] .choose__badge::before {
+  display: none;
+}
+:root[data-theme="light"] .choose__badge .badge__stamp {
+  --stamp-ink: var(--paper);
+}
+@media (max-width: 639px) {
+  /* en móvil las dos esquinas superiores se pisaban */
+  .choose .corner--tr {
+    display: none;
+  }
+}
 
 /* ===== 04b Productos ===== */
 .products {
@@ -851,7 +879,7 @@
   position: absolute;
   right: -28px;
   bottom: -28px;
-  width: clamp(140px, 18vmin, 190px);
+  width: clamp(170px, 24vmin, 250px);
   --from: scale(0.8) rotate(-30deg);
   --to: rotate(-10deg);
   --delay: 0.1s;
@@ -1056,7 +1084,7 @@
 }
 .manifesto__badge {
   flex: none;
-  width: 150px;
+  width: 200px;
   transform: rotate(-6deg);
 }
 
@@ -1224,7 +1252,7 @@
 }
 .footer__badge {
   flex: none;
-  width: clamp(170px, 20vw, 250px);
+  width: clamp(210px, 24vw, 320px);
   --from: scale(0.8) rotate(-20deg);
   --to: rotate(-5deg);
 }

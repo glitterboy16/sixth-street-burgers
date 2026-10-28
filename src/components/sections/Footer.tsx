@@ -18,7 +18,7 @@ export default function Footer() {
         <Image src="/images/pared-neon.webp" alt="" fill sizes="100vw" />
       </div>
       <div className="footer__brand">
-        <WelcomeBadge className="footer__badge" reveal />
+        <WelcomeBadge className="footer__badge" id="rombo-footer" reveal />
         <p className="footer__wordmark">
           SIXTH STREET
           <br />

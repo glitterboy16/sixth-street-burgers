@@ -285,44 +285,51 @@ svg {
   }
 }
 
-/* Badge WELCOME (rombo de bombillas) */
+/* Rombo del cartel (WelcomeBadge): neón en el tema oscuro, sello de tinta en el claro. Caja 640:440. */
 .badge {
   position: relative;
-  aspect-ratio: 1;
-  container-type: inline-size;
+  aspect-ratio: 640 / 440;
 }
-.badge__rhombus {
-  position: absolute;
-  inset: 22%;
-  background: var(--amber);
-  border: 5px dotted var(--bulb-cream);
-  transform: scale(1.25, 0.9) rotate(45deg);
-}
-.badge__text {
+.badge__svg {
   position: absolute;
   inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4cqw;
-  text-align: center;
-  line-height: 1;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
 }
-.badge__welcome {
-  font-family: var(--font-mono);
-  font-size: 5cqw;
-  font-weight: 500;
-  letter-spacing: 0.3em;
-  padding-left: 0.3em;
-  color: #fffdf7;
+.badge .t-welcome {
+  font-family: var(--font-alfa), "Rockwell", "Roboto Slab", serif;
 }
-.badge__name {
+.badge .t-script {
+  font-family: var(--font-yellowtail), "Brush Script MT", cursive;
+}
+.badge .t-block {
   font-family: var(--font-display);
-  font-size: 8.6cqw;
-  line-height: 0.95;
-  text-transform: uppercase;
-  color: var(--badge-red);
+}
+.badge__stamp {
+  --stamp-ink: #d81f2a;
+  display: none;
+}
+.badge__stamp .s-fill {
+  fill: var(--stamp-ink);
+}
+.badge__stamp .s-stroke {
+  stroke: var(--stamp-ink);
+}
+:root[data-theme="light"] .badge__neon {
+  display: none;
+}
+:root[data-theme="light"] .badge__stamp {
+  display: block;
+}
+/* el pie siempre es de noche: neón también en el tema claro */
+:root[data-theme="light"] .footer__badge .badge__neon {
+  display: block;
+}
+:root[data-theme="light"] .footer__badge .badge__stamp {
+  display: none;
 }
 
 /* Placa del logo: letrero de bombillas. De noche (tema oscuro) placa negra y letras encendidas; de día

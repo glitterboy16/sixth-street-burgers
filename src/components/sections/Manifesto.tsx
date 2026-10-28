@@ -29,7 +29,7 @@ export default function Manifesto() {
           </h2>
           <div className="manifesto__row">
             <p className="mono">Abrimos cada día. Terraza y salón. Para llevar.</p>
-            <WelcomeBadge className="manifesto__badge" />
+            <WelcomeBadge className="manifesto__badge" id="rombo-manifesto" />
           </div>
         </div>
       </div>
