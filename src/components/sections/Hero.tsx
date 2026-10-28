@@ -56,7 +56,7 @@ function geometry(set: FrameSet) {
     SCALE: Math.min(MAX_SCALE, 95 / (C.bottom - C.top)),
     LIFT: (50 - CY) / 100, // desplazamiento (fracción del alto de la caja) que centra la cerrada
     SHADOW_X: (C.x[0] + C.x[1]) / 2,
-    SHADOW_W: (C.x[1] - C.x[0]) * 1.12,
+    SHADOW_W: (C.x[1] - C.x[0]) * 1.7, // más ancha que la penumbra: el fondo no puede salirse de su caja y se cortaba a los lados
     LABEL_Y: labelCenters(set.openBands),
     LABEL_X: labelEdges(set),
   };
@@ -72,6 +72,7 @@ export default function Hero() {
   const box = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const shadow = useRef<HTMLDivElement>(null);
+  const sticker = useRef<HTMLDivElement>(null);
   const titleA = useRef<HTMLHeadingElement>(null);
   const titleB = useRef<HTMLParagraphElement>(null);
   const lead = useRef<HTMLParagraphElement>(null);
@@ -280,6 +281,8 @@ export default function Hero() {
 
       // la sombra de contacto desaparece al despegar las capas
       if (shadow.current) shadow.current.style.opacity = String(1 - sm(ff, 0, 0.35));
+      // móvil: el sello SMASH solo con la hamburguesa cerrada (principio y final), fundido suave al abrirse
+      if (sticker.current) sticker.current.style.opacity = window.innerWidth < 640 ? String(1 - sm(ff, 0, 0.3)) : "";
 
       labels.current.forEach((el, k) => {
         if (!el) return;
@@ -444,7 +447,7 @@ export default function Hero() {
                 </div>
               ))}
 
-              <div className="pop hero__sticker-smash" data-reveal="1" aria-hidden="true">
+              <div ref={sticker} className="pop hero__sticker-smash" data-reveal="1" aria-hidden="true">
                 <Image
                   src="/images/sello-smash.webp"
                   alt=""

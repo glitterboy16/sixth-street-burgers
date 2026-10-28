@@ -274,12 +274,14 @@
   top: 92.5%;
   width: 70%;
   height: 12%;
-  transform: translate(-53%, -50%);
+  transform: translate(-51.5%, -50%);
+  /* la caja mide 1,7 veces el ancho de la hamburguesa: los dos degradados caben enteros y se desvanecen a cero
+     antes del borde (antes la penumbra medía 112 % de la caja y se cortaba en seco a los lados) */
   background:
     radial-gradient(closest-side, rgb(var(--ink) / 0.82) 0%, rgb(var(--ink) / 0.5) 40%, rgb(var(--ink) / 0) 100%)
-      52% center / 64% 46% no-repeat,
+      50% center / 42% 46% no-repeat,
     radial-gradient(closest-side, rgb(var(--ink) / 0.4) 0%, rgb(var(--ink) / 0.14) 55%, rgb(var(--ink) / 0) 100%)
-      44% center / 112% 100% no-repeat;
+      50% center / 74% 100% no-repeat;
   pointer-events: none;
 }
 :root[data-theme="light"] .hero__shadow {
@@ -327,9 +329,17 @@
   height: auto;
 }
 @media (max-width: 639px) {
-  /* en móvil la hamburguesa va sola: el sello taparía el texto o el pan */
+  /* en móvil el sello va arriba a la derecha de la hamburguesa y solo se ve con ella cerrada: el JS le pone la
+     opacidad según el scroll (1 cerrada → 0 abierta), por eso aquí solo transiciona el transform */
   .hero__square .hero__sticker-smash {
-    display: none;
+    top: 0;
+    left: auto;
+    right: -5%;
+    width: 33%;
+    min-width: 84px;
+    transition: transform var(--dur, 0.5s) var(--ease, var(--ease-pop)) var(--delay, 0s);
+    --from: scale(0.8) rotate(18deg);
+    --to: rotate(7deg);
   }
 }
 
