@@ -11,8 +11,10 @@ import TodayHours from "@/components/kit/TodayHours";
 // La hamburguesa es un vídeo generado (cerrada → despiece) troceado en fotogramas WebP con alfa por
 // scripts/frames.mjs. El scroll elige el fotograma (0 = cerrada, N-1 = abierta) y lo pinta en un canvas,
 // sin fundidos entre vecinos (emborronan las capas en movimiento).
-const MAX_SCALE = 1.7; // escala de la caja con la hamburguesa cerrada: ocupa casi todo el escenario
-const TEXT_GAP = 24; // px de aire entre el texto y la hamburguesa cerrada: nunca se pisan
+const MAX_SCALE = 1.7; // escritorio: la cerrada ocupa casi todo el escenario
+const MAX_SCALE_MOBILE = 1.9; // móvil: plano completo, casi todo el ancho de la pantalla
+const MOBILE_EDGE = 8; // px que la cerrada deja a cada lado de la pantalla en móvil
+const TEXT_GAP = 24; // px de aire entre el texto y la hamburguesa cerrada en escritorio: nunca se pisan
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 const C = FRAMES.closed;
@@ -70,9 +72,15 @@ export default function Hero() {
     const ctx = cv.getContext("2d");
     if (!ctx) return;
 
-    // móvil (< 640 px) carga la versión ligera
-    const size: FrameSize = window.innerWidth < 640 ? "m" : "d";
-    const { width, height, count: n } = FRAMES.sizes[size];
+    // Móvil: la cerrada ocupa casi toda la pantalla, así que usa los fotogramas grandes (uno de cada dos: la
+    // mitad de descarga); la versión ligera solo en pantallas de baja densidad.
+    const mobile = window.innerWidth < 640;
+    const size: FrameSize = mobile && window.devicePixelRatio < 2 ? "m" : "d";
+    const stride = mobile && size === "d" ? 2 : 1;
+    const total = FRAMES.sizes[size].count;
+    const n = Math.ceil(total / stride);
+    const file = (i: number) => FRAMES.path(i === n - 1 ? total - 1 : i * stride, size);
+    const { width, height } = FRAMES.sizes[size];
     cv.width = width;
     cv.height = height;
     const frames: (HTMLImageElement | null)[] = Array(n).fill(null);
@@ -87,6 +95,8 @@ export default function Hero() {
     let raf = 0;
     let last = 0;
     let scaleMax = SCALE;
+    let tx = 0; // móvil: desplazamiento que centra la cerrada en la pantalla (la caja va pegada a la izquierda)
+    let curTx = 0;
 
     // fotograma cargado más cercano a i (mientras se descargan)
     const near = (i: number) => {
@@ -111,21 +121,33 @@ export default function Hero() {
       return r;
     };
 
-    // Zoom máximo de la cerrada: en escritorio, el que deja la hamburguesa a TEXT_GAP del texto. El borde
-    // izquierdo de la cerrada está al C.x[0] % del fotograma y la caja escala desde su centro horizontal.
+    // Zoom máximo de la cerrada y centrado. Escritorio (texto al lado): el que deja la hamburguesa a
+    // TEXT_GAP del texto; el borde izquierdo de la cerrada está al C.x[0] % del fotograma y la caja escala
+    // desde su centro horizontal. Móvil (texto encima): plano completo, casi todo el ancho de la pantalla,
+    // centrada; abierta vuelve a su sitio para que quepan las etiquetas a la derecha.
     const fit = () => {
-      if (window.innerWidth < 640) {
-        scaleMax = Math.min(SCALE, 1.3); // la caja arranca en el margen izquierdo: con menos zoom no se sale
+      const vw = window.innerWidth;
+      const sr = sq.getBoundingClientRect();
+      const left0 = sr.left - curTx;
+      if (vw < 640) {
+        const bw = sr.width * ((C.x[1] - C.x[0]) / 100); // ancho de la cerrada sin zoom
+        scaleMax = Math.max(1, Math.min(MAX_SCALE_MOBILE, (vw - 2 * MOBILE_EDGE) / bw));
+        const cx = left0 + sr.width * ((C.x[0] + C.x[1]) / 200);
+        tx = vw / 2 - cx;
         return;
       }
-      const sr = sq.getBoundingClientRect();
+      tx = 0;
+      if (vw < 900) {
+        scaleMax = SCALE; // tablet: texto encima, la caja ya cabe
+        return;
+      }
       const tr = textRight();
-      if (!Number.isFinite(tr) || tr <= sr.left - TEXT_GAP) {
+      if (!Number.isFinite(tr) || tr <= left0 - TEXT_GAP) {
         scaleMax = SCALE;
         return;
       }
       const x0 = C.x[0] / 100;
-      const limit = (tr + TEXT_GAP - sr.left) / sr.width; // borde que no puede cruzar, en fracción de la caja
+      const limit = (tr + TEXT_GAP - left0) / sr.width; // borde que no puede cruzar, en fracción de la caja
       scaleMax = Math.max(1, Math.min(SCALE, (0.5 - limit) / (0.5 - x0)));
     };
 
@@ -142,11 +164,13 @@ export default function Hero() {
         ctx.drawImage(frames[i]!, 0, 0, width, height);
       }
 
-      // zoom y subida de la caja solo en el último tramo del cierre, cuando las capas ya casi se tocan
+      // zoom, subida y centrado solo en el último tramo del cierre, cuando las capas ya casi se tocan
       const cz = sm(cl, 0.45, 1);
       const sc = 1 + (scaleMax - 1) * cz;
       const sh = LIFT * cz;
       bx.style.transform = `translateY(${sh * S}px) scale(${sc})`;
+      curTx = tx * cz;
+      sq.style.transform = curTx ? `translateX(${curTx}px)` : "";
 
       if (shadow.current) shadow.current.style.opacity = String(1 - sm(ff, 0, 0.35));
 
@@ -207,7 +231,7 @@ export default function Hero() {
       const i = order[next++];
       const im = new window.Image();
       im.decoding = "async";
-      im.src = BASE + FRAMES.path(i, size);
+      im.src = BASE + file(i);
       im.decode().then(
         () => {
           if (!disposed) {
@@ -324,7 +348,16 @@ export default function Hero() {
                   className="pop hero__sparkle"
                   data-reveal="1"
                   aria-hidden="true"
-                  style={{ top: s.top, left: s.left, width: s.size, height: s.size, "--delay": `${s.delay}s` } as React.CSSProperties}
+                  style={
+                    {
+                      top: s.top,
+                      left: s.left,
+                      width: s.size,
+                      height: s.size,
+                      "--s": `${s.size}px`,
+                      "--delay": `${s.delay}s`,
+                    } as React.CSSProperties
+                  }
                 >
                   <span className="sparkle hero__star" />
                 </div>

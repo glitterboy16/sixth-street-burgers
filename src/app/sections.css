@@ -224,8 +224,17 @@
   }
 }
 @media (max-width: 639px) {
+  /* Móvil: el fotograma + las etiquetas (al 82 % de su ancho, ~140 px) caben en la pantalla con la abierta;
+     la cerrada se amplía por JS hasta casi todo el ancho y se centra: plano completo. */
   .hero__grid {
-    --box: clamp(140px, min(72vw, 100svh - 460px), 400px);
+    --box: clamp(200px, min(100svh - 440px, (100vw - 172px) / 0.82 * 1.3333), 400px);
+  }
+  .hero__square {
+    will-change: transform;
+  }
+  /* las etiquetas caben a la derecha del fotograma sin salirse de la pantalla */
+  .hero__label .callout__text {
+    max-width: 112px;
   }
 }
 .hero__square {
@@ -303,22 +312,24 @@
   width: 100%;
   height: auto;
 }
-/* Estrellas de neón rojo fijo (el mismo brillo que las letras del logo, sin parpadeo): el pop de entrada va en
-   el contenedor y el brillo en la estrella de dentro. */
+/* Estrellas de neón rojo fijo, el mismo brillo que las letras del logo (sin parpadeo). El halo va en el
+   contenedor y la forma (clip-path) en la estrella de dentro: clip-path recorta también el filtro del propio
+   elemento, así que un drop-shadow sobre la estrella nunca se vería. El halo escala con el tamaño (--s). */
 .hero__sparkle {
   position: absolute;
   z-index: 8;
   pointer-events: none;
+  filter: drop-shadow(0 0 calc(var(--s) * 0.18) rgba(255, 46, 59, 1)) drop-shadow(0 0 calc(var(--s) * 0.5) rgba(255, 46, 59, 0.8))
+    drop-shadow(0 0 calc(var(--s) * 1.1) rgba(255, 46, 59, 0.45));
   --from: scale(0.4);
   --to: none;
 }
 .hero__star {
   inset: 0;
-  background: var(--red);
-  filter: drop-shadow(0 0 3px rgba(255, 46, 59, 0.95)) drop-shadow(0 0 10px rgba(255, 46, 59, 0.6));
+  background: var(--red); /* un solo tono, como las letras del logo: el neón es solo el halo */
 }
-:root[data-theme="light"] .hero__star {
-  filter: drop-shadow(0 0 2px rgba(255, 46, 59, 0.6)) drop-shadow(0 0 8px rgba(255, 46, 59, 0.35));
+:root[data-theme="light"] .hero__sparkle {
+  filter: drop-shadow(0 0 calc(var(--s) * 0.15) rgba(255, 46, 59, 0.7)) drop-shadow(0 0 calc(var(--s) * 0.5) rgba(255, 46, 59, 0.35));
 }
 @media (max-width: 639px) {
   /* en móvil la hamburguesa va sola: el sello taparía el texto o el pan */
