@@ -19,6 +19,8 @@ export const site = {
   phone: "+34 928 000 000", // MUESTRA
   instagram: { handle: "@sixthstreetburgers", url: "https://instagram.com/sixthstreetburgers" }, // MUESTRA
   mapsUrl: "https://maps.google.com/?q=Sixth+Street+Burgers+Puerto+del+Carmen",
+  // Pin del mapa (seccion Donde). MUESTRA: centro de Puerto del Carmen hasta que el cliente pase la ubicacion real.
+  geo: { lng: -13.6633, lat: 28.9208 },
   year: 2026,
 };
 

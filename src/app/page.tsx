@@ -13,6 +13,7 @@ import Grab from "@/components/sections/Grab";
 import Manifesto from "@/components/sections/Manifesto";
 import Wordmark from "@/components/sections/Wordmark";
 import Cta from "@/components/sections/Cta";
+import MapSection from "@/components/sections/MapSection";
 import Footer from "@/components/sections/Footer";
 import Reveals from "@/components/Reveals";
 
@@ -38,6 +39,7 @@ export default function Home() {
         <Manifesto />
         <Wordmark />
         <Cta />
+        <MapSection />
       </main>
       <Footer />
       <Reveals />

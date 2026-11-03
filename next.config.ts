@@ -7,6 +7,11 @@ const pagesBasePath = process.env.PAGES_BASE_PATH;
 const isPages = pagesBasePath !== undefined;
 
 const nextConfig: NextConfig = {
+  // El token publico de Mapbox (MAPBOX_TOKEN en .env.local / Vercel) llega al navegador como NEXT_PUBLIC_MAPBOX_TOKEN
+  env: {
+    NEXT_PUBLIC_MAPBOX_TOKEN: process.env.MAPBOX_TOKEN ?? "",
+    ...(isPages ? { NEXT_PUBLIC_BASE_PATH: pagesBasePath } : {}),
+  },
   cacheComponents: !isPages,
   partialPrefetching: !isPages,
   turbopack: {
@@ -23,7 +28,6 @@ const nextConfig: NextConfig = {
         trailingSlash: true,
         basePath: pagesBasePath,
         assetPrefix: pagesBasePath,
-        env: { NEXT_PUBLIC_BASE_PATH: pagesBasePath },
         images: { loader: "custom", loaderFile: "./image-loader.ts" },
       }
     : {}),
