@@ -1548,10 +1548,10 @@
 .mapsec .mapboxgl-ctrl-top-right {
   top: 48px;
 }
-/* marca y atribución de Mapbox (obligatorias): pequeñas, abajo a la derecha */
-.mapsec .mapboxgl-ctrl-bottom-right {
-  right: 4px;
-  bottom: 2px;
+/* marca y atribución de Mapbox: debajo de la tarjeta (decisión del cliente) */
+.mapsec .mapboxgl-ctrl-bottom-left {
+  left: calc(var(--gutter) + 16px);
+  bottom: 24px;
 }
 .mapsec .mapboxgl-ctrl-group {
   background: var(--bg);
@@ -1620,8 +1620,8 @@
   .mapsec .mapboxgl-ctrl-top-right {
     top: 44px;
   }
-  /* en móvil la tarjeta ocupa todo el ancho: la marca sube justo encima de ella */
-  .mapsec .mapboxgl-ctrl-bottom-right {
-    bottom: calc(var(--card-h, 0px) + 12px);
+  .mapsec .mapboxgl-ctrl-bottom-left {
+    left: 28px;
+    bottom: 16px;
   }
 }

@@ -158,7 +158,6 @@ const PIN_HTML = '<span class="mapsec__pin-body"><span class="mapsec__pulse"></s
 export default function MapSection() {
   const box = useRef<HTMLElement>(null);
   const host = useRef<HTMLDivElement>(null);
-  const card = useRef<HTMLDivElement>(null);
   // en servidor y antes de hidratar, Google Maps; en el cliente, Apple Maps si es iPhone/iPad/Mac
   const href = useSyncExternalStore(noop, mapsHref, () => GOOGLE);
   const [state, setState] = useState<"idle" | "ready" | "static">(TOKEN ? "idle" : "static");
@@ -171,11 +170,6 @@ export default function MapSection() {
     let map: MapboxMap | null = null;
     let off = () => {};
     let disposed = false;
-    // alto de la tarjeta → --card-h: en móvil la marca de Mapbox se coloca justo encima de ella, nunca debajo
-    const ro = new ResizeObserver(() => {
-      if (card.current) sec.style.setProperty("--card-h", card.current.offsetHeight + "px");
-    });
-    if (card.current) ro.observe(card.current);
 
     const io = new IntersectionObserver(
       async (entries) => {
@@ -197,7 +191,7 @@ export default function MapSection() {
           touchPitch: false,
           cooperativeGestures: true,
           attributionControl: false,
-          logoPosition: "bottom-right", // la marca de Mapbox es obligatoria: pequeña, abajo a la derecha (en móvil, justo sobre la tarjeta)
+          logoPosition: "bottom-left", // decisión de Angel (2026-11-05): la marca y la atribución quedan debajo de la tarjeta
           language: "es",
           locale: {
             "ScrollZoomBlocker.CtrlMessage": "Usa Ctrl + rueda para hacer zoom",
@@ -208,7 +202,7 @@ export default function MapSection() {
             "AttributionControl.ToggleAttribution": "Atribución",
           },
         });
-        map.addControl(new mapboxgl.AttributionControl({ compact: true }), "bottom-right");
+        map.addControl(new mapboxgl.AttributionControl({ compact: true }), "bottom-left");
         map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
         map.on("style.load", () => {
           if (map) paint(map, theme());
@@ -242,7 +236,6 @@ export default function MapSection() {
     return () => {
       disposed = true;
       io.disconnect();
-      ro.disconnect();
       off();
       map?.remove();
     };
@@ -262,7 +255,7 @@ export default function MapSection() {
           dangerouslySetInnerHTML={{ __html: PIN_HTML }}
         />
       )}
-      <div ref={card} className="mapsec__card" data-reveal="1">
+      <div className="mapsec__card" data-reveal="1">
         <p className="mono mapsec__kicker">Estamos aquí</p>
         <h2 id="donde-title" className="display mapsec__title">
           VEN A
