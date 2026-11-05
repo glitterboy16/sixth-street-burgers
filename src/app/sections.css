@@ -1446,7 +1446,7 @@
 .mapsec__card {
   position: absolute;
   left: var(--gutter);
-  bottom: clamp(24px, 5vh, 48px);
+  bottom: clamp(16px, 3vh, 28px);
   z-index: 4;
   width: min(100% - 2 * var(--gutter), 420px);
   padding: 22px 24px 24px;
@@ -1548,13 +1548,10 @@
 .mapsec .mapboxgl-ctrl-top-right {
   top: 48px;
 }
-/* marca y atribución de Mapbox (obligatorias): arriba a la izquierda, lejos de la tarjeta */
-.mapsec .mapboxgl-ctrl-top-left {
-  top: 46px;
-  left: calc(var(--gutter) - 10px);
-}
-.mapsec .mapboxgl-ctrl-top-left .mapboxgl-ctrl {
-  margin-top: 0;
+/* marca y atribución de Mapbox (obligatorias): pequeñas, abajo a la derecha */
+.mapsec .mapboxgl-ctrl-bottom-right {
+  right: 4px;
+  bottom: 2px;
 }
 .mapsec .mapboxgl-ctrl-group {
   background: var(--bg);
@@ -1595,6 +1592,8 @@
 }
 .mapsec .mapboxgl-ctrl-logo {
   opacity: 0.7;
+  transform: scale(0.78);
+  transform-origin: bottom right;
 }
 .mapsec .mapboxgl-cooperative-gesture-screen {
   font-family: var(--font-mono);
@@ -1610,7 +1609,7 @@
   .mapsec__card {
     left: 12px;
     right: 12px;
-    bottom: 14px;
+    bottom: 8px;
     width: auto;
     padding: 18px 18px 20px;
     gap: 8px;
@@ -1621,8 +1620,8 @@
   .mapsec .mapboxgl-ctrl-top-right {
     top: 44px;
   }
-  .mapsec .mapboxgl-ctrl-top-left {
-    top: 42px;
-    left: 2px;
+  /* en móvil la tarjeta ocupa todo el ancho: la marca sube justo encima de ella */
+  .mapsec .mapboxgl-ctrl-bottom-right {
+    bottom: calc(var(--card-h, 0px) + 12px);
   }
 }
