@@ -1548,6 +1548,14 @@
 .mapsec .mapboxgl-ctrl-top-right {
   top: 48px;
 }
+/* marca y atribución de Mapbox (obligatorias): arriba a la izquierda, lejos de la tarjeta */
+.mapsec .mapboxgl-ctrl-top-left {
+  top: 46px;
+  left: calc(var(--gutter) - 10px);
+}
+.mapsec .mapboxgl-ctrl-top-left .mapboxgl-ctrl {
+  margin-top: 0;
+}
 .mapsec .mapboxgl-ctrl-group {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -1586,7 +1594,7 @@
   filter: opacity(0.7);
 }
 .mapsec .mapboxgl-ctrl-logo {
-  opacity: 0.45;
+  opacity: 0.7;
 }
 .mapsec .mapboxgl-cooperative-gesture-screen {
   font-family: var(--font-mono);
@@ -1612,5 +1620,9 @@
   }
   .mapsec .mapboxgl-ctrl-top-right {
     top: 44px;
+  }
+  .mapsec .mapboxgl-ctrl-top-left {
+    top: 42px;
+    left: 2px;
   }
 }

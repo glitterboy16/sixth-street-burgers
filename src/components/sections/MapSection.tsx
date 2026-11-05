@@ -191,7 +191,7 @@ export default function MapSection() {
           touchPitch: false,
           cooperativeGestures: true,
           attributionControl: false,
-          logoPosition: "bottom-right",
+          logoPosition: "top-left", // la marca de Mapbox es obligatoria: va a la esquina superior izquierda, fuera de la tarjeta
           language: "es",
           locale: {
             "ScrollZoomBlocker.CtrlMessage": "Usa Ctrl + rueda para hacer zoom",
@@ -202,7 +202,7 @@ export default function MapSection() {
             "AttributionControl.ToggleAttribution": "Atribución",
           },
         });
-        map.addControl(new mapboxgl.AttributionControl({ compact: true }), "bottom-right");
+        map.addControl(new mapboxgl.AttributionControl({ compact: true }), "top-left");
         map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
         map.on("style.load", () => {
           if (map) paint(map, theme());
