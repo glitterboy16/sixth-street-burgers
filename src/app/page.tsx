@@ -38,8 +38,8 @@ export default function Home() {
         <Grab />
         <Manifesto />
         <Wordmark />
-        <Cta />
         <MapSection />
+        <Cta />
       </main>
       <Footer />
       <Reveals />

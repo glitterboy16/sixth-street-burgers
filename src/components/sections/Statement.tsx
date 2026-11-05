@@ -7,7 +7,6 @@ import ImageSlot from "@/components/kit/ImageSlot";
 export default function Statement() {
   return (
     <section className="sec sec--checker statement">
-      <Corner pos="tl">03 — Statement</Corner>
       <Corner pos="tr">Sixth Street Burgers</Corner>
       <div className="statement__grid">
         <div className="statement__copy">

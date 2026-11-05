@@ -85,7 +85,6 @@ export default function Products() {
             );
             return (
               <article key={p.id} className={`product product--${k + 1}`} aria-labelledby={`prod-${p.id}`}>
-                <Corner pos="tl">La carta · {num}</Corner>
                 <Corner pos="br">{num} / 03</Corner>
                 <div className="product__inner">
                   {copy}

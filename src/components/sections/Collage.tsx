@@ -16,7 +16,6 @@ export default function Collage() {
             style={{ objectFit: "contain", objectPosition: "50% 50%" }}
           />
         </div>
-        <Corner pos="tl">09 — Buen lío</Corner>
         <Corner pos="tr">Terraza y salón</Corner>
         <h2 className="display">
           <Line>BUENA COMIDA.</Line>

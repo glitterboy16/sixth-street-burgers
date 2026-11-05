@@ -243,7 +243,6 @@ export default function MapSection() {
 
   return (
     <section id="donde" ref={box} className={`sec sec--themed mapsec is-${state}`} aria-labelledby="donde-title">
-      <Corner pos="tl">14 — Dónde</Corner>
       <Corner pos="tr">28.92°N · 13.66°O</Corner>
       <div ref={host} className="mapsec__map" role="region" aria-label="Mapa con la ubicación de Sixth Street Burgers" />
       {state === "static" && (

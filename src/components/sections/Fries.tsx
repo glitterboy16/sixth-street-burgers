@@ -7,7 +7,6 @@ import ImageSlot from "@/components/kit/ImageSlot";
 export default function Fries() {
   return (
     <section className="sec sec--checker fries">
-      <Corner pos="tl">07 — Patatas</Corner>
       <Corner pos="tr">La compañía ideal</Corner>
       <div className="fries__grid">
         <div className="fries__art">

@@ -7,7 +7,6 @@ import WelcomeBadge from "@/components/kit/WelcomeBadge";
 export default function Choose() {
   return (
     <section id="carta" className="sec choose">
-      <Corner pos="tl">04 — La carta</Corner>
       <Corner pos="tr">Tres hamburguesas · Sin fallo</Corner>
       <div className="choose__stage">
         <h2 className="display choose__title">

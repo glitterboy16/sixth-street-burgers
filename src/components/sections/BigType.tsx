@@ -5,7 +5,6 @@ import Arrow from "@/components/kit/Arrow";
 export default function BigType() {
   return (
     <section className="sec bigtype">
-      <Corner pos="tl">06 — Hecha de verdad</Corner>
       <Corner pos="tr">Cocina abierta</Corner>
       <h2 className="display">
         <Line>HECHA</Line>

@@ -518,7 +518,6 @@ export default function Hero() {
   return (
     <section id="top" ref={section} className="hero" aria-label="Portada">
       <div ref={stage} className="hero__stage">
-        <Corner pos="tl">01 — Hero</Corner>
         <Corner pos="tr">{site.coords}</Corner>
         <Corner pos="bl">
           <TodayHours />

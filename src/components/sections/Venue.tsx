@@ -5,7 +5,6 @@ import Line from "@/components/kit/Line";
 export default function Venue() {
   return (
     <section id="local" className="sec sec--themed venue">
-      <Corner pos="tl">08 — El local</Corner>
       <Corner pos="tr">Puerto del Carmen</Corner>
       <div className="venue__grid">
         <div className="venue__copy">

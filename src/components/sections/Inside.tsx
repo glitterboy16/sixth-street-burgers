@@ -8,7 +8,6 @@ import ImageSlot from "@/components/kit/ImageSlot";
 export default function Inside() {
   return (
     <section className="sec sec--checker sec--themed inside">
-      <Corner pos="tl">05 — ¿Qué lleva?</Corner>
       <Corner pos="tr">Nada que esconder</Corner>
       <div className="inside__grid">
         <div className="inside__copy">
