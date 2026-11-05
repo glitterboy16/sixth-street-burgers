@@ -45,3 +45,7 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# generados por next.config.ts en cada build
+/public/sitemap.xml
+/public/robots.txt

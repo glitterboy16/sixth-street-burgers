@@ -5,6 +5,7 @@ import type { Map as MapboxMap } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { site } from "@/data/site";
 import { onThemeChange, prefersReducedMotion } from "@/lib/motion";
+import { useLang } from "@/i18n/LangContext";
 import Corner from "@/components/kit/Corner";
 import TodayHours from "@/components/kit/TodayHours";
 
@@ -156,6 +157,7 @@ const PIN_SVG =
 const PIN_HTML = '<span class="mapsec__pin-body"><span class="mapsec__pulse"></span>' + PIN_SVG + "</span>";
 
 export default function MapSection() {
+  const { lang, t } = useLang();
   const box = useRef<HTMLElement>(null);
   const host = useRef<HTMLDivElement>(null);
   // en servidor y antes de hidratar, Google Maps; en el cliente, Apple Maps si es iPhone/iPad/Mac
@@ -192,15 +194,8 @@ export default function MapSection() {
           cooperativeGestures: true,
           attributionControl: false,
           logoPosition: "bottom-left", // decisión de Angel (2026-11-05): la marca y la atribución quedan debajo de la tarjeta
-          language: "es",
-          locale: {
-            "ScrollZoomBlocker.CtrlMessage": "Usa Ctrl + rueda para hacer zoom",
-            "ScrollZoomBlocker.CmdMessage": "Usa ⌘ + rueda para hacer zoom",
-            "TouchPanBlocker.Message": "Usa dos dedos para mover el mapa",
-            "NavigationControl.ZoomIn": "Acercar",
-            "NavigationControl.ZoomOut": "Alejar",
-            "AttributionControl.ToggleAttribution": "Atribución",
-          },
+          language: lang,
+          locale: { ...t.map.locale },
         });
         map.addControl(new mapboxgl.AttributionControl({ compact: true }), "bottom-left");
         map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
@@ -222,7 +217,7 @@ export default function MapSection() {
         pin.href = url;
         pin.target = "_blank";
         pin.rel = "noopener";
-        pin.setAttribute("aria-label", `Abrir ${site.name} en Maps`);
+        pin.setAttribute("aria-label", t.map.pinAria);
         pin.innerHTML = PIN_HTML;
         new mapboxgl.Marker({ element: pin, anchor: "bottom" }).setLngLat([lng, lat]).addTo(map);
 
@@ -239,35 +234,35 @@ export default function MapSection() {
       off();
       map?.remove();
     };
-  }, []);
+  }, [lang, t]);
 
   return (
     <section id="donde" ref={box} className={`sec sec--themed mapsec is-${state}`} aria-labelledby="donde-title">
       <Corner pos="tr">28.92°N · 13.66°O</Corner>
-      <div ref={host} className="mapsec__map" role="region" aria-label="Mapa con la ubicación de Sixth Street Burgers" />
+      <div ref={host} className="mapsec__map" role="region" aria-label={t.map.aria} />
       {state === "static" && (
         <a
           href={href}
           target="_blank"
           rel="noopener"
           className="mapsec__pin mapsec__pin--static"
-          aria-label={`Abrir ${site.name} en Maps`}
+          aria-label={t.map.pinAria}
           dangerouslySetInnerHTML={{ __html: PIN_HTML }}
         />
       )}
       <div className="mapsec__card" data-reveal="1">
-        <p className="mono mapsec__kicker">Estamos aquí</p>
+        <p className="mono mapsec__kicker">{t.map.kicker}</p>
         <h2 id="donde-title" className="display mapsec__title">
-          VEN A
+          {t.map.lines[0]}
           <br />
-          VERNOS.
+          {t.map.lines[1]}
         </h2>
         <address className="mono mapsec__addr">{site.address.join(" · ")}</address>
         <p className="mono mapsec__hours">
           <TodayHours />
         </p>
         <a href={href} target="_blank" rel="noopener" className="btn btn--primary">
-          Abrir en Maps <span className="arr" aria-hidden="true">↗</span>
+          {t.map.button} <span className="arr" aria-hidden="true">↗</span>
         </a>
       </div>
     </section>

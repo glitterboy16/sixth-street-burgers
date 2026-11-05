@@ -1,12 +1,13 @@
 import Marquee from "@/components/kit/Marquee";
 import { tickerWords } from "@/data/site";
 
+// Las dos cintas van siempre en inglés, en todos los idiomas (decisión de Angel).
 const fwd = tickerWords.map((w) => `${w} ★ `).join("").repeat(2);
 const rev = [...tickerWords].reverse().map((w) => `${w} ★ `).join("").repeat(2);
 
 export default function Ticker() {
   return (
-    <section className="ticker" aria-label={tickerWords.join(", ").toLowerCase()}>
+    <section className="ticker" lang="en" aria-label={tickerWords.join(", ").toLowerCase()}>
       <div className="ticker__bar ticker__bar--a" aria-hidden="true">
         <Marquee text={fwd} speed="40s" />
       </div>

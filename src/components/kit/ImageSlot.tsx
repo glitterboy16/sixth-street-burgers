@@ -9,6 +9,8 @@ type Props = {
   sizes?: string;
   priority?: boolean;
   className?: string;
+  /** Texto alternativo en el idioma de la página (si no, el español de data/images.ts). */
+  alt?: string;
 };
 
 /**
@@ -22,6 +24,7 @@ export default function ImageSlot({
   sizes = "(max-width: 640px) 90vw, 50vw",
   priority,
   className = "",
+  alt,
 }: Props) {
   const img = slots[id];
   const circle = shape === "circle" ? "slot--circle" : "";
@@ -32,16 +35,17 @@ export default function ImageSlot({
       </div>
     );
   }
+  const text = alt ?? img.alt;
   if (img.cutout) {
     return (
       <div className={`slot slot--cutout ${className}`}>
-        <Cutout src={img.src} alt={img.alt} sizes={sizes} priority={priority} contact={img.cutout === "contact"} />
+        <Cutout src={img.src} alt={text} sizes={sizes} priority={priority} contact={img.cutout === "contact"} />
       </div>
     );
   }
   return (
     <div className={`slot ${circle} ${className}`}>
-      <Image src={img.src} alt={img.alt} fill sizes={sizes} priority={priority} style={{ objectFit: fit }} />
+      <Image src={img.src} alt={text} fill sizes={sizes} priority={priority} style={{ objectFit: fit }} />
     </div>
   );
 }

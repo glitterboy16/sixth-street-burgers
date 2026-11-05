@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { products } from "@/data/site";
+import { homeHref } from "@/i18n/config";
+import { useLang } from "@/i18n/LangContext";
 import { clamp, onScroll, prefersReducedMotion, stageProgress } from "@/lib/motion";
 import Corner from "@/components/kit/Corner";
 import ImageSlot from "@/components/kit/ImageSlot";
@@ -9,6 +11,7 @@ import ImageSlot from "@/components/kit/ImageSlot";
 const BTN = ["btn--paper", "btn--ink-cheese", "btn--ink-paper"];
 
 export default function Products() {
+  const { lang, t } = useLang();
   const section = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
@@ -36,7 +39,7 @@ export default function Products() {
   }, []);
 
   return (
-    <section ref={section} className="products" aria-label="La carta">
+    <section ref={section} className="products" aria-label={t.products.aria}>
       <div ref={stage} className="products__stage">
         <div ref={track} className="products__track">
           {products.map((p, k) => {
@@ -50,7 +53,7 @@ export default function Products() {
                     }}
                     className="product__photo"
                   >
-                    <ImageSlot id={p.slot} shape="circle" sizes="(max-width: 640px) 90vw, 76vmin" />
+                    <ImageSlot id={p.slot} alt={t.alts[p.slot]} shape="circle" sizes="(max-width: 640px) 90vw, 76vmin" />
                   </div>
                   {k === 0 && (
                     <>
@@ -74,11 +77,11 @@ export default function Products() {
                   <br />
                   {p.name[1]}
                 </h3>
-                <p className="product__desc">{p.desc}</p>
+                <p className="product__desc">{t.products.desc[p.id]}</p>
                 <div className="product__buy">
                   <span className="price">{p.price}</span>
-                  <a href="#visitanos" className={`btn ${BTN[k]}`}>
-                    Pedir <span className="arr" aria-hidden="true">↗</span>
+                  <a href={homeHref(lang, "#visitanos")} className={`btn ${BTN[k]}`}>
+                    {t.products.order} <span className="arr" aria-hidden="true">↗</span>
                   </a>
                 </div>
               </div>

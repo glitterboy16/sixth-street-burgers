@@ -3,7 +3,9 @@
 import { useEffect, useRef } from "react";
 import { FRAMES, type FrameSize } from "@/data/frames";
 import { FRAMES_DARK } from "@/data/frames-dark";
-import { heroLabels, site } from "@/data/site";
+import { site } from "@/data/site";
+import { useLang } from "@/i18n/LangContext";
+import { markReady } from "@/lib/boot";
 import { clamp, navH, onThemeChange, prefersReducedMotion, sm } from "@/lib/motion";
 import Corner from "@/components/kit/Corner";
 import TodayHours from "@/components/kit/TodayHours";
@@ -21,6 +23,7 @@ const FILL = 97; // % del alto de la caja que ocupa la hamburguesa cuando el zoo
 const MOBILE_EDGE = 8; // px que la cerrada deja a cada lado de la pantalla en móvil
 const TEXT_GAP = 24; // px de aire entre el texto y la hamburguesa cerrada en escritorio: nunca se pisan
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const LABELS_N = 5; // etiquetas de la abierta (una por capa), en i18n hero.labels
 
 type Theme = "dark" | "light";
 type FrameSet = typeof FRAMES;
@@ -30,7 +33,7 @@ const themeNow = (): Theme => (document.documentElement.dataset.theme === "light
 // Centro de cada etiqueta en el fotograma abierto (% del alto): las bandas que midió el script. Si el matte
 // no separa exactamente una banda por capa, se reparten entre la primera y la última.
 function labelCenters(b: [number, number][]) {
-  const n = heroLabels.length;
+  const n = LABELS_N;
   if (b.length === n) return b.map(([a, z]) => (a + z) / 2);
   const top = b.length ? (b[0][0] + b[0][1]) / 2 : 20;
   const bottom = b.length ? (b[b.length - 1][0] + b[b.length - 1][1]) / 2 : 85;
@@ -40,7 +43,7 @@ function labelCenters(b: [number, number][]) {
 // Borde derecho de cada capa abierta (% del ancho): el punto de cada etiqueta va a --callout-gap de SU capa,
 // así todas guardan el mismo margen y ninguna pisa la hamburguesa (el pan, la lechuga y el queso no miden igual).
 function labelEdges(set: FrameSet) {
-  const n = heroLabels.length;
+  const n = LABELS_N;
   const r = (set as { openRight?: number[] }).openRight;
   return r && r.length === n ? r : Array(n).fill(88);
 }
@@ -64,6 +67,7 @@ const GEO: Record<Theme, ReturnType<typeof geometry>> = { dark: geometry(FRAMES_
 const G0 = GEO.dark; // tema por defecto: lo que lleva el HTML inicial
 
 export default function Hero() {
+  const { t } = useLang();
   const section = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const copy = useRef<HTMLDivElement>(null);
@@ -139,6 +143,7 @@ export default function Hero() {
     let g = GEO[theme];
     let drawn = -1;
     let disposed = false;
+    let frameReady = false; // primer fotograma pintado: la cortina de carga puede levantarse
 
     const rm = prefersReducedMotion();
     // p = progreso del scroll suavizado (0 arriba, 1 al final). Arriba la hamburguesa está cerrada, grande y
@@ -354,13 +359,19 @@ export default function Hero() {
       // (p 0,84-1), sin volver a cerrarse: el usuario ve el despiece quieto y sigue bajando.
       const ff = sm(p, 0.04, 0.84);
 
-      const i = near(Math.round(ff * (cur.n - 1)));
-      if (i >= 0) {
+      const want = Math.round(ff * (cur.n - 1));
+      const i = near(want);
+      // hasta que se levanta la cortina no se pinta un fotograma lejano (la abierta puede llegar antes que la cerrada)
+      if (i >= 0 && (frameReady || Math.abs(i - want) <= 2)) {
         warm(cur, i);
         if (i !== drawn) {
           drawn = i;
           ctx.clearRect(0, 0, cv.width, cv.height);
           ctx.drawImage(cur.bm.get(i) ?? cur.frames[i]!, 0, 0, cv.width, cv.height);
+        }
+        if (!frameReady) {
+          frameReady = true;
+          markReady("frame");
         }
       }
 
@@ -496,6 +507,9 @@ export default function Hero() {
       resizeT = window.setTimeout(refit, 250);
     };
     fit();
+    // arranque sin persecución: el progreso empieza donde está el scroll (recarga a mitad de página)
+    target = rm ? 1 : progressNow();
+    p = target;
     if (rm) {
       draw();
     } else {
@@ -516,32 +530,32 @@ export default function Hero() {
   }, []);
 
   return (
-    <section id="top" ref={section} className="hero" aria-label="Portada">
+    <section id="top" ref={section} className="hero" aria-label={t.hero.aria}>
       <div ref={stage} className="hero__stage">
         <Corner pos="tr">{site.coords}</Corner>
         <Corner pos="bl">
           <TodayHours />
         </Corner>
         <p ref={cue} className="corner corner--br hero__cue">
-          Scroll <span aria-hidden="true">↓</span>
+          {t.common.scroll} <span aria-hidden="true">↓</span>
         </p>
 
         <div className="hero__grid">
           <div ref={copy} className="hero__copy">
             <div className="hero__titles hero__in" style={{ "--i": 0 } as React.CSSProperties}>
               <h1 ref={titleA} className="display">
-                MUERDE
+                {t.hero.titleA[0]}
                 <br />
-                FUERTE.
+                {t.hero.titleA[1]}
               </h1>
               <p ref={titleB} className="display hero__title-b" aria-hidden="true">
-                HECHA
+                {t.hero.titleB[0]}
                 <br />
-                AL MOMENTO.
+                {t.hero.titleB[1]}
               </p>
             </div>
             <p ref={lead} className="lead hero__in" style={{ "--i": 1 } as React.CSSProperties}>
-              Smash burgers a la plancha. Un diner americano de noche, en Lanzarote.
+              {t.hero.lead}
             </p>
           </div>
 
@@ -558,13 +572,13 @@ export default function Hero() {
                   ref={canvas}
                   className="hero__canvas"
                   role="img"
-                  aria-label="La smash burger de Sixth Street abriéndose por capas y volviéndose a montar al hacer scroll"
+                  aria-label={t.hero.canvasAria}
                 />
               </div>
 
-              {heroLabels.map((t, i) => (
+              {t.hero.labels.map((label, i) => (
                 <div
-                  key={t}
+                  key={label}
                   ref={(el) => {
                     labels.current[i] = el;
                   }}
@@ -573,7 +587,7 @@ export default function Hero() {
                 >
                   <span className="callout__dot" />
                   <span className="callout__line" />
-                  <span className="callout__text">{t}</span>
+                  <span className="callout__text">{label}</span>
                 </div>
               ))}
             </div>
@@ -584,10 +598,10 @@ export default function Hero() {
               hamburguesa tenga todo el hueco y nunca los pise. */}
           <div ref={actions} className="hero__actions hero__in" style={{ "--i": 2 } as React.CSSProperties}>
             <a href="#carta" className="btn btn--primary">
-              Ver la carta
+              {t.hero.ctaMenu}
             </a>
             <a href="#local" className="btn btn--outline">
-              Cómo llegar
+              {t.hero.ctaMap}
             </a>
           </div>
         </div>

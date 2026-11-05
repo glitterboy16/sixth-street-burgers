@@ -1,21 +1,26 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { schedule, site } from "@/data/site";
+import { schedule } from "@/data/site";
+import { useLang } from "@/i18n/LangContext";
 
 const noop = () => () => {};
 
-/** Horario de hoy según el día en Canarias. En servidor y antes de hidratar muestra el texto genérico. */
-function todayText() {
+/** Horario de hoy según el día en Canarias. En servidor y antes de hidratar muestra el tramo general. */
+function todaySlot() {
   const weekday = new Intl.DateTimeFormat("en-US", { timeZone: "Atlantic/Canary", weekday: "short" }).format(
     new Date(),
   );
   const day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(weekday);
-  const slot = schedule.find((s) => s.days.includes(day));
-  return slot ? `Abierto hoy ${slot.open}–${slot.close}` : site.todayHours;
+  return schedule.find((s) => s.days.includes(day)) ?? schedule[0];
 }
 
 export default function TodayHours() {
-  const text = useSyncExternalStore(noop, todayText, () => site.todayHours);
-  return <>{text}</>;
+  const { t } = useLang();
+  const slot = useSyncExternalStore(noop, todaySlot, () => schedule[0]);
+  return (
+    <>
+      {t.common.openToday} {slot.open}–{slot.close}
+    </>
+  );
 }
