@@ -22,7 +22,12 @@ type Set = typeof ANCHO;
 const SETS: Record<"ancho" | "alto", Set> = { ancho: ANCHO, alto: ALTO as Set };
 type SizeKey = "h" | "m";
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-const ZOOM = 1.06; // la cerrada empieza un poco más cerca y la cámara se aleja mientras se abre
+// Zoom sobre el encuadre "cover". Apaisado (ordenador): la hamburguesa empieza cerca (Z_CERRADA) y la cámara se
+// acerca todavía más mientras se abre (Z_ABIERTA), sin perder el bar de fondo. Vertical (móvil): empieza un poco
+// cerca y se aleja al abrirse. En los dos casos el zoom nunca deja que la hamburguesa se salga de la pantalla.
+const Z_CERRADA = 1.28;
+const Z_ABIERTA = 1.42;
+const Z_MOVIL = 1.06;
 const pathOf = (set: Set, size: SizeKey, i: number) => `${BASE}/frames/${set.set}/${size}/frame_${String(i).padStart(3, "0")}.webp?v=${set.stamp}`;
 
 export default function Hero() {
@@ -141,31 +146,37 @@ export default function Hero() {
     // tamaño del trozo visible. La hamburguesa (unión de cerrada y abierta) se coloca hacia la derecha en apaisado
     // (el texto va a la izquierda) y centrada en vertical; si la pantalla es más estrecha que la zona segura, manda
     // que se vea entera antes que la posición.
-    const view = (z: number) => {
+    const view = (ff: number) => {
       const pk = pack!;
       const { FW, FH } = pk;
-      const s = Math.max(CW / FW, CH / FH) * z;
-      const vw = CW / s,
-        vh = CH / s;
+      const landscape = pk.set.set === "ancho";
+      const sCover = Math.max(CW / FW, CH / FH);
       const o = pk.set.open,
         c = pk.set.closed;
       const L = (Math.min(o[0], c[0]) / 100) * FW,
         R = (Math.max(o[2], c[2]) / 100) * FW;
-      const T = (Math.min(o[1], c[1]) / 100) * FH,
-        B = (Math.max(o[3], c[3]) / 100) * FH;
-      const landscape = pk.set.set === "ancho";
+      const B = (Math.max(o[3], c[3]) / 100) * FH;
+      // altura que ocupa ahora la hamburguesa: de la cerrada a la abierta (la corona sube casi toda en la primera mitad)
+      const T = ((c[1] + (o[1] - c[1]) * sm(ff, 0, 0.45)) / 100) * FH;
+      const MT = 0.04,
+        MB = 0.1; // márgenes arriba y abajo, en fracción del alto de la pantalla
+      let z = landscape && CW >= 900 ? Z_CERRADA + (Z_ABIERTA - Z_CERRADA) * sm(ff, 0.05, 0.95) : 1 + (Z_MOVIL - 1) * (1 - sm(ff, 0, 0.6));
+      const zFit = (CH * (1 - MT - MB)) / ((B - T) * sCover); // zoom máximo con el que la hamburguesa cabe entera
+      z = Math.max(1, Math.min(z, zFit));
+      const s = sCover * z;
+      const vw = CW / s,
+        vh = CH / s;
       const tx = landscape && CW >= 900 ? 0.68 : 0.5; // dónde cae el centro de la hamburguesa en la pantalla
       let sx = (L + R) / 2 - tx * vw;
-      sx = clamp(sx, Math.min(L - 8 / s, FW - vw), Math.max(0, R + 8 / s - vw)); // la hamburguesa entera si cabe
+      // la hamburguesa entera si cabe: sx entre "se ve el borde derecho" y "se ve el borde izquierdo"
+      const sxMin = R + 8 / s - vw,
+        sxMax = L - 8 / s;
+      sx = clamp(sx, Math.min(sxMin, sxMax), Math.max(sxMin, sxMax));
       sx = clamp(sx, 0, FW - vw);
-      const ty = landscape ? 0.5 : 0.5;
-      let sy = (T + B) / 2 - ty * vh;
-      // margen: la base no se mete en el fundido de abajo ni la corona bajo el borde de arriba (si cabe)
-      const mb = 0.1 * vh,
-        mt = 0.04 * vh;
-      sy = clamp(sy, Math.min(B + mb - vh, T - mt), Math.max(B + mb - vh, T - mt));
+      let sy = (T + B) / 2 - 0.5 * vh + ((MB - MT) / 2) * vh;
+      sy = clamp(sy, Math.min(B + MB * vh - vh, T - MT * vh), Math.max(B + MB * vh - vh, T - MT * vh));
       sy = clamp(sy, 0, FH - vh);
-      return { sx, sy, vw, vh, s };
+      return { sx, sy, vw, vh, s, z };
     };
 
     let drawn = -1;
@@ -186,12 +197,11 @@ export default function Hero() {
       const pk = pack;
       if (!pk) return;
       const ff = sm(p, 0.04, 0.84); // 0 cerrada, 1 abierta; se queda abierta hasta el final
-      const z = 1 + (ZOOM - 1) * (1 - sm(ff, 0, 0.6));
       const want = Math.round(ff * (pk.N - 1));
       const i = near(pk, want);
-      const v = view(z);
+      const v = view(ff);
       if (i >= 0 && (frameReady || Math.abs(i - want) <= 2)) {
-        const key = i * 10000 + Math.round(v.sx) + Math.round(v.sy) * 7 + Math.round(z * 1000) * 13;
+        const key = i * 10000 + Math.round(v.sx) + Math.round(v.sy) * 7 + Math.round(v.z * 1000) * 13;
         if (key !== drawn) {
           drawn = key;
           ctx.drawImage(pk.frames[i]!, v.sx, v.sy, v.vw, v.vh, 0, 0, cv.width, cv.height);
