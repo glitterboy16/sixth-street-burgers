@@ -102,5 +102,67 @@
     37.11
    ]
   }
+ },
+ "hilos": {
+  "ref": {
+   "queso": -358,
+   "carne": -110
+  },
+  "list": [
+   {
+    "src": "/hero/hilos/hilo-0.webp",
+    "box": [
+     770,
+     2059,
+     271,
+     522
+    ]
+   },
+   {
+    "src": "/hero/hilos/hilo-1.webp",
+    "box": [
+     1143,
+     2279,
+     177,
+     275
+    ]
+   },
+   {
+    "src": "/hero/hilos/hilo-2.webp",
+    "box": [
+     1327,
+     2160,
+     230,
+     387
+    ]
+   },
+   {
+    "src": "/hero/hilos/hilo-3.webp",
+    "box": [
+     1679,
+     2251,
+     143,
+     287
+    ]
+   },
+   {
+    "src": "/hero/hilos/hilo-4.webp",
+    "box": [
+     1855,
+     2186,
+     78,
+     358
+    ]
+   },
+   {
+    "src": "/hero/hilos/hilo-5.webp",
+    "box": [
+     2008,
+     2091,
+     267,
+     490
+    ]
+   }
+  ]
  }
 }

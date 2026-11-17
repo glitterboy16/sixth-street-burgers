@@ -14,7 +14,7 @@ import TodayHours from "@/components/kit/TodayHours";
 // No es un vídeo: es UNA foto 4K del despiece recortada en capas (renders/capas/recortar_capas.py y exportar_web.py):
 // un fondo fijo (bar, papel, pan de abajo y bacon) y cuatro capas que se mueven (carnes con cheddar, loncha de
 // queso, cebolla y pan de arriba). Cada capa es siempre la misma imagen nítida: nada cambia de forma ni pierde
-// resolución, y todo pesa menos de 1 MB.
+// resolución, y todo pesa menos de 1 MB. Entre la loncha y la carne, hilos de queso que se estiran y se rompen.
 //
 // Hay dos fondos: "ancho" (escritorio y tablet apaisada) y "alto" (móvil y tablet de pie), elegidos por la
 // proporción de la pantalla y pintados tipo "cover". Las capas son las mismas para los dos: cada fondo dice cómo
@@ -27,9 +27,12 @@ const pct = (v: number) => (v / 100) * LH;
 // Desplazamiento vertical de cada capa respecto a su sitio en la foto del despiece, en % del alto de la escena de
 // capas (+ = abajo). Cerrada: las capas apiladas sobre el bacon. Abierta: separadas con aire entre ellas.
 const CLOSED: Record<LayerId, number> = { carne: 0, queso: 6.5, cebolla: 9.7, pan: 14.7 };
-const OPEN: Record<LayerId, number> = { carne: -2, queso: -6.5, cebolla: -7.5, pan: -8.5 };
-// En apaisado la torre abierta tiene que caber en el poco alto de una pantalla ancha: se separa menos.
-const SPREAD: Record<SceneId, number> = { alto: 1, ancho: 0.35 };
+// En apaisado la torre abierta tiene que caber en el poco alto de una pantalla ancha (también panorámica): se separa
+// menos, pero la carne se queda sobre el bacon para que entre la loncha y la carne haya hueco para los hilos.
+const OPEN: Record<SceneId, Record<LayerId, number>> = {
+  alto: { carne: -2, queso: -6.5, cebolla: -7.5, pan: -8.5 },
+  ancho: { carne: 0, queso: -3.5, cebolla: -4.5, pan: -5 },
+};
 // Cuándo sube cada capa a lo largo de la apertura (0-1): primero el pan y la cebolla, el queso y la carne detrás.
 const TIMING: Record<LayerId, [number, number]> = { pan: [0, 0.72], cebolla: [0.05, 0.8], queso: [0.11, 0.88], carne: [0.18, 0.96] };
 // Etiquetas, en el orden de i18n (pan, cebolla, carne, bacon, salsa): ancla en px de la escena de capas y capa que la mueve
@@ -40,6 +43,11 @@ const LABELS: { anchor: keyof typeof CAPAS.anchors; layer?: LayerId }[] = [
   { anchor: "bacon" },
   { anchor: "salsa" },
 ];
+// Hilos de queso entre la loncha y la carne (renders/capas/hilos/): cada hilo cuelga de la loncha y se apoya en la
+// carne, así que se estira cuando se separan; después se rompe, cada uno en su momento (no todos a la vez), y se
+// recoge hacia la loncha. SNAP = apertura (0-1) a la que se rompe cada hilo, en el orden de izquierda a derecha.
+const HILOS = CAPAS.hilos;
+const SNAP = [0.8, 0.72, 0.88, 0.76, 0.93, 0.84];
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const url = (p: string) => `${BASE}${p}?v=${CAPAS.stamp}`;
 
@@ -99,6 +107,17 @@ export default function Hero() {
         () => {},
       );
     }
+    const hiloImg: (HTMLImageElement | null)[] = HILOS.list.map(() => null);
+    HILOS.list.forEach((h, i) => {
+      loadImage(url(h.src)).then(
+        (im) => {
+          if (disposed) return;
+          hiloImg[i] = im;
+          draw();
+        },
+        () => {},
+      );
+    });
 
     // ── geometría ─────────────────────────────────────────────────────────────────────────────────────
     let CW = 1,
@@ -131,7 +150,7 @@ export default function Hero() {
     const offset = (id: LayerId, ff: number) => {
       const [a, b] = TIMING[id];
       const e = sm(ff, a, b);
-      return pct(CLOSED[id] + (OPEN[id] * SPREAD[scene] - CLOSED[id]) * e);
+      return pct(CLOSED[id] + (OPEN[scene][id] - CLOSED[id]) * e);
     };
 
     // Ventana de recorte "cover" con la hamburguesa entera dentro (márgenes arriba y abajo) y hacia la derecha en
@@ -184,12 +203,34 @@ export default function Hero() {
       const v = view(ff);
       const k = cv.width / v.vw; // px del canvas por px del fondo
       ctx.drawImage(base, v.sx, v.sy, v.vw, v.vh, 0, 0, cv.width, cv.height);
-      for (const id of ORDER) {
+      const drawLayer = (id: LayerId) => {
         const [bx, by, bw, bh] = CAPAS.layers[id].box;
         const x = bx * v.xs + v.tx,
           y = (by + offset(id, ff)) * v.xs + v.ty;
         ctx.drawImage(layerImg[id]!, (x - v.sx) * k, (y - v.sy) * k, bw * v.xs * k, bh * v.xs * k);
-      }
+      };
+      drawLayer("carne");
+      // hilos: entre la carne (detrás) y la loncha (delante, tapa su arranque)
+      const dq = offset("queso", ff) - HILOS.ref.queso,
+        dc = offset("carne", ff) - HILOS.ref.carne;
+      HILOS.list.forEach((h, i) => {
+        const im = hiloImg[i];
+        if (!im) return;
+        const [hx, hy, hw, hh] = h.box;
+        const top = hy + dq,
+          len = hy + hh + dc - top; // de la loncha a la carne, en px de la escena de capas
+        const r = len / hh;
+        const snap = sm(ff, SNAP[i % SNAP.length], SNAP[i % SNAP.length] + 0.06);
+        const a = sm(r, 0.06, 0.22) * (1 - snap);
+        if (a <= 0.01 || len <= 1) return;
+        const drawn = len * (1 - 0.6 * snap); // al romperse se recoge hacia la loncha
+        ctx.globalAlpha = a;
+        ctx.drawImage(im, (hx * v.xs + v.tx - v.sx) * k, (top * v.xs + v.ty - v.sy) * k, hw * v.xs * k, drawn * v.xs * k);
+        ctx.globalAlpha = 1;
+      });
+      drawLayer("queso");
+      drawLayer("cebolla");
+      drawLayer("pan");
       if (!ready) {
         ready = true;
         markReady("frame");
