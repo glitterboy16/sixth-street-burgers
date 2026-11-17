@@ -32,7 +32,8 @@ const STAMP = Date.now().toString(36);
 // h: pantallas grandes o de alta densidad; m: el resto (la web elige según los píxeles reales del canvas)
 // proporción nativa del vídeo de MiniMax H3 2K (2544×1456)
 // ancho h = resolución nativa del vídeo (2544x1456): en pantallas grandes el canvas pedía más de 1920 px y estiraba
-const SIZES = SET === "ancho" ? { h: [2544, 1456, 74], m: [1280, 733, 74] } : { h: [1099, 1920, 76], m: [733, 1280, 74] };
+// ancho: x = 4K (solo para los momentos de reposo en pantallas grandes), h = scroll en ordenador, m = pantallas pequeñas
+const SIZES = SET === "ancho" ? { x: [3840, 2198, 84], h: [2560, 1465, 82], m: [1280, 733, 80] } : { h: [1099, 1920, 76], m: [733, 1280, 74] };
 // --vf: filtro de ffmpeg al extraer (p. ej. "eq=gamma=1.12" para igualar el brillo de la foto de partida)
 const VF = arg("vf", "");
 // --plate DIR (solo "ancho"): prolongación del bar a la izquierda hecha con renders/smash-fondo/herramientas/

@@ -21,7 +21,13 @@ import TodayHours from "@/components/kit/TodayHours";
 // mismo en el primer y el último fotograma: la mesa y el bar no se mueven, solo suben las capas.
 type Set = typeof ANCHO;
 const SETS: Record<"ancho" | "alto", Set> = { ancho: ANCHO, alto: ALTO as Set };
-type SizeKey = "h" | "m";
+// Tamaños de fotograma: "m" y "h" para el scroll (el que pida la pantalla) y "x" (4K, solo en apaisado) para cuando la
+// hamburguesa está parada: entonces se pinta el fotograma 4K de ese momento, con todo el detalle, sin cargar los 223
+// en 4K ni gastar la memoria que ocuparían.
+type SizeKey = "x" | "h" | "m";
+type Dim = { width: number; height: number; count: number };
+const sizeOf = (set: Set, size: SizeKey): Dim | undefined => (set.sizes as Partial<Record<SizeKey, Dim>>)[size];
+const HQ_KEEP = 4; // fotogramas 4K que se guardan a la vez (los últimos usados)
 // Opcional: prolongación fija del bar a la izquierda del vídeo apaisado, para vídeos que traen la hamburguesa centrada
 // (en ordenador va a la derecha, con el texto encima del bar). Solo si el manifiesto trae "plate" (frames-hero.mjs
 // --plate); el vídeo actual ya tiene el bar a la izquierda y no la usa.
@@ -70,21 +76,28 @@ export default function Hero() {
       EXT: number; // px de prolongación a la izquierda (0 si no hay)
       F: number; // px de fundido de la prolongación sobre el vídeo
       plate: HTMLImageElement | null;
+      hq: SizeKey | null; // tamaño 4K para los momentos de reposo (null si la pantalla no lo necesita)
+      hqImgs: Map<number, HTMLImageElement>;
+      hqLoading: Map<number, boolean>; // true = cargando, false = falló (no se vuelve a pedir)
     };
     let pack: Pack | null = null;
-    const choose = (): { set: Set; size: SizeKey } => {
+    const choose = (): { set: Set; size: SizeKey; hq: SizeKey | null } => {
       // misma regla que el CSS (@media (max-aspect-ratio: 1/1)): proporción de la ventana, no del escenario
       const set = window.innerWidth > window.innerHeight ? SETS.ancho : SETS.alto;
       // tamaño: el grande si el pequeño se vería ampliado con el zoom de partida (misma cuenta que la precarga de Home)
       const W = st.clientWidth,
         H = st.clientHeight;
       const z = set === SETS.ancho && W >= 900 ? Z_CERRADA : Z_MOVIL;
-      const m = set.sizes.m;
-      const k = Math.max(W / (m.width * (1 + (plateOf(set)?.ext ?? 0))), H / m.height) * z * Math.min(window.devicePixelRatio || 1, 2);
-      return { set, size: k > AMPLIACION_MAX ? "h" : "m" };
+      const ext = 1 + (plateOf(set)?.ext ?? 0);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const need = (d: Dim) => Math.max(W / (d.width * ext), H / d.height) * z * dpr; // cuánto se ampliaría
+      const size: SizeKey = need(set.sizes.m) > AMPLIACION_MAX ? "h" : "m";
+      // 4K en reposo si el fotograma del scroll se vería ampliado en esta pantalla
+      const hq: SizeKey | null = sizeOf(set, "x") && need(sizeOf(set, size)!) > 1 ? "x" : null;
+      return { set, size, hq };
     };
-    const makePack = (set: Set, size: SizeKey): Pack => {
-      const { width, height, count } = set.sizes[size];
+    const makePack = (set: Set, size: SizeKey, hq: SizeKey | null): Pack => {
+      const { width, height, count } = sizeOf(set, size)!;
       const order: number[] = [];
       const seen = new Set<number>();
       const push = (i: number) => {
@@ -100,6 +113,7 @@ export default function Hero() {
       const pk: Pack = {
         set, size, FW: width, FH: height, N: count, frames: Array(count).fill(null), order, next: 0, inflight: 0,
         EXT: pl ? pl.ext * width : 0, F: pl ? pl.fade * width : 0, plate: null,
+        hq, hqImgs: new Map(), hqLoading: new Map(),
       };
       if (pl) {
         const im = new window.Image();
@@ -116,6 +130,27 @@ export default function Hero() {
         );
       }
       return pk;
+    };
+    // fotograma 4K de un momento de reposo: se carga, se guarda (los HQ_KEEP últimos) y se vuelve a pintar
+    const loadHQ = (pk: Pack, i: number) => {
+      if (!pk.hq || pk.hqImgs.has(i) || pk.hqLoading.has(i)) return;
+      pk.hqLoading.set(i, true);
+      const im = new window.Image();
+      im.decoding = "async";
+      im.src = pathOf(pk.set, pk.hq, i);
+      im.decode().then(
+        () => {
+          pk.hqLoading.delete(i);
+          if (disposed || pk !== pack) return;
+          pk.hqImgs.set(i, im);
+          while (pk.hqImgs.size > HQ_KEEP) pk.hqImgs.delete(pk.hqImgs.keys().next().value!);
+          drawn = -1;
+          draw();
+          // al cargar la portada (fotograma 0), deja listo también el final, donde se queda la hamburguesa abierta
+          if (i === 0) loadHQ(pk, pk.N - 1);
+        },
+        () => pk.hqLoading.set(i, false),
+      );
     };
     const pump = (pk: Pack) => {
       while (!disposed && pk === pack && pk.inflight < 6 && pk.next < pk.order.length) {
@@ -163,8 +198,8 @@ export default function Hero() {
     };
     const fit = () => {
       const want = choose();
-      if (!pack || pack.set !== want.set || pack.size !== want.size) {
-        pack = makePack(want.set, want.size);
+      if (!pack || pack.set !== want.set || pack.size !== want.size || pack.hq !== want.hq) {
+        pack = makePack(want.set, want.size, want.hq);
         pump(pack);
       }
       CW = st.clientWidth;
@@ -258,6 +293,9 @@ export default function Hero() {
     };
 
     let drawn = -1;
+    let settled = true; // sin scroll en curso: la hamburguesa está quieta en un fotograma
+    let hqTimer = 0,
+      hqPending = -1;
     let target = rm ? 1 : 0;
     let p = target;
     let raf = 0;
@@ -276,11 +314,26 @@ export default function Hero() {
       if (!pk) return;
       const ff = sm(p, 0.04, 0.84); // 0 cerrada, 1 abierta; se queda abierta hasta el final
       const want = Math.round(ff * (pk.N - 1));
-      const i = near(pk, want);
       const v = view(ff);
+      // en reposo, el fotograma 4K si ya está; si no, se pide (tras 120 ms quieto, para no pedirlo mientras se scrollea)
+      const hqImg = settled && pk.hq ? pk.hqImgs.get(want) : undefined;
+      if (hqImg) {
+        pk.hqImgs.delete(want);
+        pk.hqImgs.set(want, hqImg); // el último usado va al final (no se borra)
+      } else if (settled && pk.hq && hqPending !== want && !pk.hqLoading.has(want)) {
+        hqPending = want;
+        clearTimeout(hqTimer);
+        hqTimer = window.setTimeout(() => {
+          hqPending = -1;
+          if (settled && pack === pk) loadHQ(pk, want);
+        }, 120);
+      }
+      const i = hqImg ? want : near(pk, want);
       if (i >= 0 && (frameReady || Math.abs(i - want) <= 2)) {
+        const img = hqImg ?? pk.frames[i]!;
+        const r = img.naturalWidth / pk.FW; // 1 con los fotogramas del scroll, 1,5 con los 4K
         const key =
-          i * 10000 + Math.round(v.sx) + Math.round(v.sy) * 7 + Math.round(v.z * 1000) * 13 + Math.round(v.ox) * 31 + Math.round(v.oy) * 37 + (pk.plate ? 0.5 : 0);
+          i * 10000 + Math.round(v.sx) + Math.round(v.sy) * 7 + Math.round(v.z * 1000) * 13 + Math.round(v.ox) * 31 + Math.round(v.oy) * 37 + (pk.plate ? 0.5 : 0) + (hqImg ? 0.25 : 0);
         if (key !== drawn) {
           drawn = key;
           if (v.dst) {
@@ -289,7 +342,7 @@ export default function Hero() {
             const k = cv.width / CW;
             ctx.fillStyle = "#0b0a09";
             ctx.fillRect(0, 0, cv.width, cv.height);
-            ctx.drawImage(pk.frames[i]!, v.ox * k, v.oy * k, pk.FW * v.s * k, pk.FH * v.s * k);
+            ctx.drawImage(img, v.ox * k, v.oy * k, pk.FW * v.s * k, pk.FH * v.s * k);
             if (v.oy > 0.5) {
               const g = ctx.createLinearGradient(0, v.oy * k, 0, (v.oy + 90) * k);
               g.addColorStop(0, "rgba(11,10,9,1)");
@@ -298,14 +351,14 @@ export default function Hero() {
               ctx.fillRect(0, v.oy * k, cv.width, 90 * k);
             }
           } else if (!pk.EXT) {
-            ctx.drawImage(pk.frames[i]!, v.sx, v.sy, v.vw, v.vh, 0, 0, cv.width, cv.height);
+            ctx.drawImage(img, v.sx * r, v.sy * r, v.vw * r, v.vh * r, 0, 0, cv.width, cv.height);
           } else {
             // vídeo desplazado a la derecha y la prolongación del bar encima, fundida por su borde derecho
             const k = cv.width / v.vw;
             const dy = -v.sy * k;
             ctx.fillStyle = "#0b0a09";
             ctx.fillRect(0, 0, cv.width, cv.height);
-            ctx.drawImage(pk.frames[i]!, (pk.EXT - v.sx) * k, dy, pk.FW * k, pk.FH * k);
+            ctx.drawImage(img, (pk.EXT - v.sx) * k, dy, pk.FW * k, pk.FH * k);
             if (pk.plate) ctx.drawImage(pk.plate, -v.sx * k, dy, (pk.EXT + pk.F) * k, pk.FH * k);
           }
         }
@@ -356,6 +409,7 @@ export default function Hero() {
       if (Math.abs(d) < 0.0002) {
         p = target;
         last = 0;
+        settled = true;
         draw();
         return;
       }
@@ -367,6 +421,7 @@ export default function Hero() {
     const progressNow = () => clamp((window.scrollY + navH() - secTop) / range, 0, 1);
     const update = () => {
       target = progressNow();
+      if (Math.abs(target - p) >= 0.0002) settled = false;
       if (!raf) raf = requestAnimationFrame(tick);
     };
 
@@ -401,6 +456,7 @@ export default function Hero() {
       disposed = true;
       if (raf) cancelAnimationFrame(raf);
       clearTimeout(resizeT);
+      clearTimeout(hqTimer);
       window.removeEventListener("scroll", update);
       window.removeEventListener("resize", onResize);
     };
