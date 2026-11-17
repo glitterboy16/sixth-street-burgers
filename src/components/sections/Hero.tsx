@@ -182,9 +182,20 @@ export default function Hero() {
       const L = (Math.min(o[0], c[0]) / 100) * FW + EXT,
         R = (Math.max(o[2], c[2]) / 100) * FW + EXT;
       const B = (Math.max(o[3], c[3]) / 100) * FH;
-      // altura que ocupa ahora la hamburguesa: de la cerrada a la abierta (la corona sube casi toda en la primera mitad)
-      const T = ((c[1] + (o[1] - c[1]) * sm(ff, 0, 0.45)) / 100) * FH;
-      const MT = 0.04,
+      // altura que ocupa ahora la hamburguesa: la medida en cada fotograma ("tops"), para que el encuadre la siga
+      // exacta y el pan nunca se meta bajo la barra de arriba; si no hay medida, una curva de cerrada a abierta
+      const tops = (pk.set as { tops?: number[] }).tops;
+      let Tp: number;
+      if (tops && tops.length === pk.N) {
+        const fi = ff * (pk.N - 1),
+          i0 = Math.floor(fi),
+          i1 = Math.min(pk.N - 1, i0 + 1);
+        Tp = tops[i0] + (tops[i1] - tops[i0]) * (fi - i0);
+      } else {
+        Tp = c[1] + (o[1] - c[1]) * sm(ff, 0, 0.45);
+      }
+      const T = (Tp / 100) * FH;
+      const MT = landscape ? 0.05 : 0.04,
         MB = 0.1; // márgenes arriba y abajo, en fracción del alto de la pantalla
       let z = landscape && CW >= 900 ? Z_CERRADA + (Z_ABIERTA - Z_CERRADA) * sm(ff, 0.05, 0.95) : 1 + (Z_MOVIL - 1) * (1 - sm(ff, 0, 0.6));
       const zFit = (CH * (1 - MT - MB)) / ((B - T) * sCover); // zoom máximo con el que la hamburguesa cabe entera

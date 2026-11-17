@@ -9,6 +9,9 @@
 // - meta.json (medido con BiRefNet sobre el primer y el último fotograma, en % del fotograma):
 //     { "closed": [l, t, r, b], "open": [l, t, r, b], "labels": [{ "y": 20, "right": 70 }, ... 5] }
 // - Escribe public/frames/<set>/{h,m}/frame_NNN.webp y src/data/hero-<set>.json.
+// - --video también puede ser una secuencia de PNG ("carpeta/f_%04d.png"), p. ej. la del papel fijado
+//   (renders/hero5/papel/fijar_papel.py); si el meta trae "tops" (alto de la torre por fotograma, en %), pasa al
+//   manifiesto y la web encuadra con la altura real de la hamburguesa en cada momento.
 import sharp from "sharp";
 import fs from "node:fs";
 import path from "node:path";
@@ -28,7 +31,8 @@ const MANIFEST = path.resolve(`src/data/hero-${SET}.json`);
 const STAMP = Date.now().toString(36);
 // h: pantallas grandes o de alta densidad; m: el resto (la web elige según los píxeles reales del canvas)
 // proporción nativa del vídeo de MiniMax H3 2K (2544×1456)
-const SIZES = SET === "ancho" ? { h: [1920, 1099, 76], m: [1280, 733, 74] } : { h: [1099, 1920, 76], m: [733, 1280, 74] };
+// ancho h = resolución nativa del vídeo (2544x1456): en pantallas grandes el canvas pedía más de 1920 px y estiraba
+const SIZES = SET === "ancho" ? { h: [2544, 1456, 74], m: [1280, 733, 74] } : { h: [1099, 1920, 76], m: [733, 1280, 74] };
 // --vf: filtro de ffmpeg al extraer (p. ej. "eq=gamma=1.12" para igualar el brillo de la foto de partida)
 const VF = arg("vf", "");
 // --plate DIR (solo "ancho"): prolongación del bar a la izquierda hecha con renders/smash-fondo/herramientas/
@@ -76,7 +80,7 @@ if (PLATE) {
       .toFile(path.join(OUT, `plate-${s}.webp`));
   }
 }
-fs.writeFileSync(MANIFEST, JSON.stringify({ set: SET, stamp: STAMP, sizes, closed: META.closed, open: META.open, labels: META.labels, ...(plate ? { plate } : {}) }, null, 1) + "\n");
+fs.writeFileSync(MANIFEST, JSON.stringify({ set: SET, stamp: STAMP, sizes, closed: META.closed, open: META.open, labels: META.labels, ...(META.tops ? { tops: META.tops } : {}), ...(plate ? { plate } : {}) }, null, 1) + "\n");
 for (const s of Object.keys(SIZES)) {
   const dir = path.join(OUT, s);
   const total = fs.readdirSync(dir).reduce((a, f) => a + fs.statSync(path.join(dir, f)).size, 0);
