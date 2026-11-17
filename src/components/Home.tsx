@@ -17,20 +17,16 @@ import MapSection from "@/components/sections/MapSection";
 import Footer from "@/components/sections/Footer";
 import Reveals from "@/components/Reveals";
 import Boot from "@/components/Boot";
-import HERO_ANCHO from "@/data/hero-ancho.json";
-import HERO_ALTO from "@/data/hero-alto.json";
-import { AMPLIACION_MAX, Z_CERRADA, Z_MOVIL } from "@/components/sections/hero-zoom";
+import CAPAS from "@/data/hero-capas.json";
 import { schedule, site } from "@/data/site";
 import { dict, homeHref, menuHref, type Lang } from "@/i18n";
 import { SITE_URL } from "@/i18n/meta";
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
-// Precarga del primer fotograma del hero (el LCP) con la misma elección que hace Hero.tsx: juego por la forma de la
-// pantalla (ancho/alto) y tamaño por los píxeles que hacen falta con el zoom de partida (h si m se vería ampliado).
-type HeroJson = Pick<typeof HERO_ALTO, "set" | "stamp" | "sizes"> & { plate?: { ext: number } };
-const first = (h: HeroJson, z: number) => ({ set: h.set, v: h.stamp, mw: h.sizes.m.width * (1 + (h.plate?.ext ?? 0)), mh: h.sizes.m.height, z });
-const preloadScript = `(function(){try{var A=${JSON.stringify(first(HERO_ANCHO, Z_CERRADA))},V=${JSON.stringify(first(HERO_ALTO, Z_MOVIL))};var nav=innerWidth>=900?88:72;var w=innerWidth,h=innerHeight-nav;var S=innerWidth>innerHeight?A:V;var zz=S===A&&w>=900?S.z:${Z_MOVIL};var k=Math.max(w/S.mw,h/S.mh)*zz*Math.min(devicePixelRatio||1,2);var z=k>${AMPLIACION_MAX}?"h":"m";var l=document.createElement("link");l.rel="preload";l.as="image";l.fetchPriority="high";l.href=${JSON.stringify(BASE)}+"/frames/"+S.set+"/"+z+"/frame_000.webp?v="+S.v;document.head.appendChild(l)}catch(e){}})();`;
+// Precarga del hero por capas (el LCP): el fondo de la forma de pantalla que toca (ancho/alto, misma regla que
+// Hero.tsx) y las cuatro capas, que son pequeñas. Con prioridad alta para que la cortina de carga dure lo mínimo.
+const preloadScript = `(function(){try{var b=${JSON.stringify(BASE)},v=${JSON.stringify(CAPAS.stamp)};var S=innerWidth>innerHeight?${JSON.stringify(CAPAS.scenes.ancho.base)}:${JSON.stringify(CAPAS.scenes.alto.base)};var L=[S].concat(${JSON.stringify(Object.keys(CAPAS.layers).map((k) => "/hero/capas/" + k + ".webp"))});for(var i=0;i<L.length;i++){var l=document.createElement("link");l.rel="preload";l.as="image";l.fetchPriority=i<2?"high":"auto";l.href=b+L[i]+"?v="+v;document.head.appendChild(l)}}catch(e){}})();`;
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
