@@ -17,7 +17,8 @@ import MapSection from "@/components/sections/MapSection";
 import Footer from "@/components/sections/Footer";
 import Reveals from "@/components/Reveals";
 import Boot from "@/components/Boot";
-import { FRAMES_FOTO } from "@/data/frames-foto";
+import HERO_ANCHO from "@/data/hero-ancho.json";
+import HERO_ALTO from "@/data/hero-alto.json";
 import { schedule, site } from "@/data/site";
 import { dict, homeHref, menuHref, type Lang } from "@/i18n";
 import { SITE_URL } from "@/i18n/meta";
@@ -27,8 +28,9 @@ const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 // Precarga del primer fotograma del hero (el LCP) elegido como lo hará Hero.tsx: juego del tema activo y tamaño
 // según pantalla (h escritorio, d móvil de alta densidad, m móvil de baja). Antes se precargaba siempre el 2K
 // oscuro, que en un iPhone claro eran 300 KB tirados.
-const FIRST = { h: FRAMES_FOTO.path(0, "h"), d: FRAMES_FOTO.path(0, "d"), m: FRAMES_FOTO.path(0, "m") };
-const preloadScript = `(function(){try{var F=${JSON.stringify(FIRST)};var s=innerWidth<640?((devicePixelRatio||1)<2?"m":"d"):"h";var l=document.createElement("link");l.rel="preload";l.as="image";l.fetchPriority="high";l.href=${JSON.stringify(BASE)}+F[s];document.head.appendChild(l)}catch(e){}})();`;
+// primer fotograma del hero según la forma de la pantalla (ancho/alto) y su tamaño, igual que elige Hero.tsx
+const first = (h: typeof HERO_ANCHO) => ({ set: h.set, v: h.stamp, mw: Math.max(h.sizes.m.width, h.sizes.m.height) });
+const preloadScript = `(function(){try{var A=${JSON.stringify(first(HERO_ANCHO))},V=${JSON.stringify(first(HERO_ALTO))};var nav=innerWidth>=900?88:72;var w=innerWidth,h=innerHeight-nav;var S=innerWidth>innerHeight?A:V;var need=Math.max(w,h)*Math.min(devicePixelRatio||1,2);var z=need>S.mw*1.15?"h":"m";var l=document.createElement("link");l.rel="preload";l.as="image";l.fetchPriority="high";l.href=${JSON.stringify(BASE)}+"/frames/"+S.set+"/"+z+"/frame_000.webp?v="+S.v;document.head.appendChild(l)}catch(e){}})();`;
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -41,7 +43,7 @@ export default function Home({ lang }: { lang: Lang }) {
     "@type": "Restaurant",
     name: site.name,
     url,
-    image: `${SITE_URL}${BASE}/images/og-v3.jpg`,
+    image: `${SITE_URL}${BASE}/images/og-v4.jpg`,
     description: t.meta.description,
     servesCuisine: ["Smash burgers", "American"],
     priceRange: "€€",

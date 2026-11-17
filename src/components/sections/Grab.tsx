@@ -16,7 +16,7 @@ export default function Grab({ lang }: { lang: Lang }) {
         <div className="grab__art">
           <div className="grab__square" data-reveal="1">
             <div className="grab__photo">
-              <ImageSlot id="coge-la-tuya-burger" alt={t.alts["coge-la-tuya-burger"]} shape="circle" sizes="(max-width: 640px) 80vw, 52vmin" />
+              <ImageSlot id="double-trouble" alt={t.alts["double-trouble"]} sizes="(max-width: 640px) 80vw, 52vmin" />
             </div>
             <div className="sparkle grab__sparkle" aria-hidden="true" />
           </div>

@@ -25,16 +25,19 @@ export const site = {
 // Las cintas de arriba van SIEMPRE en inglés, en todos los idiomas (decisión de Angel, 2026-11-05).
 export const tickerWords = ["JUICY", "SMASHED", "HOT", "CRISPY", "NO RUSH"];
 
-export type ProductId = "la-de-la-casa" | "la-picante" | "la-doble";
+// Hamburguesas de la portada (bloque con scroll lateral): las reales de la carta con foto del cliente.
+// El nombre es propio y no se traduce; la descripción sale de i18n (products.desc) y el precio, de la carta.
+export type ProductId = "smash-burger" | "classic" | "texas-cowboy" | "double-trouble" | "chicken-burger";
 export type Product = {
   id: ProductId;
-  name: [string, string]; // nombre propio: no se traduce
-  price: string;
-  slot: "producto-1-la-de-la-casa" | "producto-2-la-picante" | "producto-3-la-doble";
+  name: [string] | [string, string];
+  price: number;
 };
 
 export const products: Product[] = [
-  { id: "la-de-la-casa", name: ["LA DE", "LA CASA"], price: "12,90 €", slot: "producto-1-la-de-la-casa" },
-  { id: "la-picante", name: ["LA", "PICANTE"], price: "13,90 €", slot: "producto-2-la-picante" },
-  { id: "la-doble", name: ["LA", "DOBLE"], price: "15,90 €", slot: "producto-3-la-doble" },
+  { id: "smash-burger", name: ["SMASH", "BURGER"], price: 12.9 },
+  { id: "classic", name: ["CLASSIC"], price: 12.9 },
+  { id: "texas-cowboy", name: ["TEXAS", "COWBOY"], price: 14.9 },
+  { id: "double-trouble", name: ["DOUBLE", "TROUBLE"], price: 17.9 },
+  { id: "chicken-burger", name: ["CHICKEN", "BURGER"], price: 13.9 },
 ];

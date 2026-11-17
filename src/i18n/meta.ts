@@ -27,7 +27,7 @@ export function pageMetadata(lang: Lang, page: Page): Metadata {
       url: localePath(lang, page),
       // vista previa al compartir el enlace (WhatsApp, Instagram…): si cambia, cambia también el nombre del archivo
       // para que las apps no sigan mostrando la versión que tienen en caché
-      images: [{ url: `${BASE}/images/og-v3.jpg`, width: 1200, height: 630, alt: t.meta.ogAlt }],
+      images: [{ url: `${BASE}/images/og-v4.jpg`, width: 1200, height: 630, alt: t.meta.ogAlt }],
       locale: OG_LOCALE[lang],
       alternateLocale: LANGS.filter((l) => l !== lang).map((l) => OG_LOCALE[l]),
       type: "website",

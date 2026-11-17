@@ -17,7 +17,7 @@ export default function Manifesto({ lang }: { lang: Lang }) {
           </h3>
           <div className="manifesto__square">
             <div className="manifesto__photo">
-              <ImageSlot id="manifiesto-burger" alt={t.alts["manifiesto-burger"]} shape="circle" sizes="320px" />
+              <ImageSlot id="smash-burger" alt={t.alts["smash-burger"]} sizes="320px" />
             </div>
           </div>
           <div className="sparkle" aria-hidden="true" />

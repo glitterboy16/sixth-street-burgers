@@ -7,17 +7,14 @@ import Corner from "@/components/kit/Corner";
 import Line from "@/components/kit/Line";
 import Checker from "@/components/kit/Checker";
 import TodayHours from "@/components/kit/TodayHours";
-import { carta, L } from "@/data/carta";
+import { carta, L, precio, type Plato } from "@/data/carta";
 import { site } from "@/data/site";
 import { dict, homeHref, hoursLines, type Lang } from "@/i18n";
 
 /**
- * Página /carta/: la carta completa por apartados. La portada no cambia (sigue con sus tres hamburguesas);
- * aquí va todo lo demás, con el mismo lenguaje visual: Anton a lo grande, mono para precios, paneles de color.
+ * Página /carta/: la carta real del local por apartados (data/carta.ts), con el lenguaje visual de la portada:
+ * Anton a lo grande, mono para precios, paneles de color. Las bebidas van en una lista apretada por subgrupos.
  */
-// "12,90 €" → "12.90" para los datos estructurados
-const priceNumber = (p: string) => p.replace(/[^\d,]/g, "").replace(",", ".");
-
 export default function MenuPage({ lang }: { lang: Lang }) {
   const t = dict(lang);
   const tel = site.phone.replace(/\s/g, "");
@@ -30,14 +27,28 @@ export default function MenuPage({ lang }: { lang: Lang }) {
     hasMenuSection: carta.map((c) => ({
       "@type": "MenuSection",
       name: L(c.titulo, lang),
-      hasMenuItem: c.platos.map((p) => ({
-        "@type": "MenuItem",
-        name: L(p.nombre, lang),
-        ...(p.desc ? { description: L(p.desc, lang) } : {}),
-        offers: { "@type": "Offer", price: priceNumber(p.precio), priceCurrency: "EUR" },
-      })),
+      hasMenuItem: c.grupos
+        .flatMap((g) => g.platos)
+        .map((p) => ({
+          "@type": "MenuItem",
+          name: L(p.nombre, lang),
+          ...(p.desc ? { description: L(p.desc, lang) } : {}),
+          offers: { "@type": "Offer", price: p.precio.toFixed(2), priceCurrency: "EUR" },
+        })),
     })),
   };
+
+  const item = (p: Plato, i: number) => (
+    <li key={p.nombre.es} className="menu-item" data-reveal="1" style={{ "--delay": `${Math.min(i, 8) * 0.04}s` } as CSSProperties}>
+      <div className="menu-item__row">
+        <span className="menu-item__name">{L(p.nombre, lang)}</span>
+        <span className="menu-item__dots" aria-hidden="true" />
+        <span className="menu-item__price">{precio(p.precio, lang)}</span>
+      </div>
+      {p.desc && <p className="menu-item__desc">{L(p.desc, lang)}</p>}
+    </li>
+  );
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
@@ -73,7 +84,12 @@ export default function MenuPage({ lang }: { lang: Lang }) {
         <Checker />
 
         {carta.map((c, ci) => (
-          <section key={c.id} id={c.id} className={`sec menu-cat menu-cat--${c.tone}`} aria-labelledby={`cat-${c.id}`}>
+          <section
+            key={c.id}
+            id={c.id}
+            className={`sec menu-cat menu-cat--${c.tone}${c.compacta ? " menu-cat--compacta" : ""}`}
+            aria-labelledby={`cat-${c.id}`}
+          >
             {ci === 0 && <div className="sparkle menu-cat__sparkle" aria-hidden="true" />}
             <div className="menu-cat__grid">
               <header className="menu-cat__head">
@@ -82,23 +98,18 @@ export default function MenuPage({ lang }: { lang: Lang }) {
                 </h2>
                 {c.nota && <p className="menu-cat__note">{L(c.nota, lang)}</p>}
               </header>
-              <ul className="menu-list">
-                {c.platos.map((p, i) => (
-                  <li
-                    key={p.nombre.es}
-                    className="menu-item"
-                    data-reveal="1"
-                    style={{ "--delay": `${Math.min(i, 8) * 0.05}s` } as CSSProperties}
-                  >
-                    <div className="menu-item__row">
-                      <span className="menu-item__name">{L(p.nombre, lang)}</span>
-                      <span className="menu-item__dots" aria-hidden="true" />
-                      <span className="menu-item__price">{p.precio}</span>
+              {c.grupos.length === 1 && !c.grupos[0].titulo ? (
+                <ul className="menu-list">{c.grupos[0].platos.map(item)}</ul>
+              ) : (
+                <div className="menu-groups">
+                  {c.grupos.map((g, gi) => (
+                    <div key={gi} className="menu-group">
+                      {g.titulo && <h3 className="mono menu-group__title">{L(g.titulo, lang)}</h3>}
+                      <ul className="menu-list">{g.platos.map(item)}</ul>
                     </div>
-                    {p.desc && <p className="menu-item__desc">{L(p.desc, lang)}</p>}
-                  </li>
-                ))}
-              </ul>
+                  ))}
+                </div>
+              )}
             </div>
           </section>
         ))}

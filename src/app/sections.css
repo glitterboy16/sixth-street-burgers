@@ -153,6 +153,9 @@
 }
 
 /* ===== 01 Hero ===== */
+/* Foto a sangre: el canvas cubre todo el escenario (encuadre "ancho" o "alto" según la pantalla, ver Hero.tsx) y el
+   texto va encima con un velo oscuro para que se lea. La foto es de noche en el bar, así que el hero va siempre en
+   claro sobre oscuro, también con el tema claro; por abajo se funde con el fondo de la página. */
 .hero {
   position: relative;
   height: 230vh;
@@ -165,6 +168,31 @@
   height: calc(100vh - var(--nav-h));
   height: calc(100svh - var(--nav-h));
   overflow: clip;
+  background: #0b0a09;
+  color: #faf6ef;
+  --fg: #faf6ef;
+  --muted: rgba(250, 246, 239, 0.82);
+  --border: rgba(250, 246, 239, 0.32);
+  --corner: rgba(250, 246, 239, 0.85);
+}
+.hero__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.hero__veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, transparent 86%, rgba(11, 10, 9, 0.92) 100%),
+    linear-gradient(90deg, rgba(11, 10, 9, 0.86) 0%, rgba(11, 10, 9, 0.62) 30%, rgba(11, 10, 9, 0.18) 52%, transparent 64%);
+}
+.hero__stage > .corner {
+  z-index: 9;
+  color: var(--corner);
 }
 .hero__cue {
   display: flex;
@@ -172,8 +200,12 @@
   gap: 8px;
   will-change: opacity;
 }
-/* Entrada de la portada: titular, texto, botones y hamburguesa en escalera de 90 ms. Empieza cuando la cortina de
-   carga se levanta (html.is-booting la deja en pausa) y 240 ms después, para que la cortina ya casi no se vea. */
+.hero__cue span {
+  display: inline-block;
+  animation: bob 1.4s ease-in-out infinite;
+}
+/* Entrada de la portada: titular, texto y botones en escalera de 90 ms. Empieza cuando la cortina de carga se
+   levanta (html.is-booting la deja en pausa) y 240 ms después, para que la cortina ya casi no se vea. */
 .hero__in {
   animation: hero-in 0.8s var(--ease-reveal) both;
   animation-delay: calc(var(--i, 0) * 90ms + 240ms);
@@ -193,41 +225,31 @@
     animation: none;
   }
 }
-.hero__cue span {
-  display: inline-block;
-  animation: bob 1.4s ease-in-out infinite;
-}
 .hero__grid {
-  /* --box es el ALTO de la escena: casi todo el escenario. La caja de la hamburguesa es 3:4 (ancho =
-     0,75 × alto) como los fotogramas. En escritorio la escena va absoluta a la derecha y el texto puede
-     entrar bajo el margen transparente del fotograma (la hamburguesa cerrada empieza al 14 % de su ancho:
-     el texto solo puede usar el 8 %). */
-  --box: min(calc(100svh - var(--nav-h) - 48px), 58vw, 1000px);
-  --frame-w: calc(var(--box) * 0.75);
-  --labels: clamp(160px, 13vw, 200px);
   position: relative;
+  z-index: 8;
   height: 100%;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: clamp(16px, 3vw, 48px);
-  row-gap: clamp(18px, 3vh, 32px);
-  align-content: center; /* las filas (texto y botones) van juntas en el centro, no repartidas */
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(20px, 3.4vh, 36px);
   padding: 56px var(--gutter);
+  max-width: min(46vw, 680px);
+  pointer-events: none;
+}
+.hero__grid a {
+  pointer-events: auto;
 }
 .hero__copy {
-  position: relative;
-  z-index: 9; /* el texto siempre por encima de la hamburguesa y sus adornos */
-  flex: 1 1 240px;
-  min-width: 0;
-  max-width: calc(100% - var(--frame-w) - var(--labels) + var(--frame-w) * 0.08);
   display: flex;
   flex-direction: column;
-  gap: clamp(18px, 3vh, 32px);
+  gap: clamp(16px, 2.6vh, 28px);
+  will-change: opacity, transform;
 }
-/* el párrafo nunca llega bajo la hamburguesa cerrada (que sí ocupa todo el ancho del fotograma) */
 .hero__copy > .lead {
   max-width: 440px;
+  color: var(--muted);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
 }
 .hero__titles {
   display: grid;
@@ -235,137 +257,82 @@
 }
 .hero__titles > * {
   grid-area: 1 / 1;
-  font-size: clamp(52px, 7vw, 150px);
+  font-size: clamp(56px, 7vw, 150px);
   color: var(--fg);
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
   will-change: transform;
 }
 .hero__titles .hero__title-b {
   color: var(--red);
   transform: translateY(110%);
 }
-/* Fila propia del grid (fuera de la columna de texto): en escritorio queda bajo el párrafo; en móvil y tablet,
-   bajo la hamburguesa. Siempre por encima de ella. */
 .hero__actions {
-  position: relative;
-  z-index: 9;
-  flex: 0 0 100%;
-  min-width: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
 }
-.hero__scene {
-  position: absolute;
-  right: var(--gutter);
-  top: 50%;
-  width: calc(var(--frame-w) + var(--labels));
-  height: var(--box);
-  margin-top: calc(var(--box) / -2);
-  pointer-events: none;
+.hero__actions .btn--outline {
+  color: #faf6ef;
+  border-color: rgba(250, 246, 239, 0.6);
+  background: rgba(11, 10, 9, 0.35);
 }
-@media (max-width: 899px) {
-  /* el titular ya no cabe al lado de una hamburguesa grande: texto arriba, hamburguesa debajo */
-  .hero__grid {
-    --box: clamp(140px, min(60vw, 100svh - 420px), 400px);
+.hero__actions .btn--outline:hover {
+  border-color: #faf6ef;
+}
+/* Vertical (móvil y tablet de pie): texto arriba sobre el techo del bar, botones abajo sobre la mesa */
+@media (max-aspect-ratio: 1/1) {
+  .hero__veil {
+    background:
+      linear-gradient(to bottom, rgba(11, 10, 9, 0.84) 0%, rgba(11, 10, 9, 0.5) 26%, transparent 44%),
+      linear-gradient(to top, rgba(11, 10, 9, 0.9) 0%, rgba(11, 10, 9, 0.5) 14%, transparent 30%);
   }
-  .hero__copy {
-    flex-basis: 100%;
+  .hero__grid {
     max-width: none;
+    justify-content: space-between;
+    padding: 40px var(--gutter) 44px;
   }
-  .hero__scene {
-    position: relative;
-    right: auto;
-    top: auto;
-    margin-top: 0;
-    flex: 0 1 auto;
-    width: min(100%, calc(var(--frame-w) + var(--labels)));
-  }
-  /* la columna de etiquetas mide ~160 px: letra más pequeña y hasta dos líneas */
-  .hero__label .callout__text {
-    max-width: 140px;
-    font-size: 12px;
-    letter-spacing: 0.05em;
-    line-height: 1.2;
+  .hero__titles > * {
+    font-size: clamp(52px, 13vw, 110px);
   }
 }
-@media (max-width: 639px) {
-  /* Móvil: el fotograma + las etiquetas (al 82 % de su ancho, ~140 px) caben en la pantalla con la abierta;
-     la cerrada se amplía por JS hasta casi todo el ancho y se centra: plano completo. */
-  .hero__grid {
-    --box: clamp(220px, min(100svh - 440px, (100vw - 24px) * 1.3333), 460px);
-    /* texto arriba, hamburguesa en medio, botones al pie: menos relleno vertical para que la caja crezca */
-    padding: 44px var(--gutter) 48px;
-    row-gap: 14px;
-  }
-  .hero__scene {
-    width: 100%;
-  }
-  /* más específico que la regla general de .hero__square (que va después y pone left: 0) */
-  .hero__scene .hero__square {
-    left: calc(50% - var(--box) * 0.375);
-    --callout-gap: 8px;
-  }
-  /* las etiquetas caben a la derecha del fotograma sin salirse de la pantalla */
-  .hero__label .callout__text {
-    max-width: 128px;
-  }
-}
-.hero__square {
+/* Etiquetas de las capas: las coloca el JS (transform) a la derecha de cada capa, siempre dentro de la pantalla */
+.hero__label {
   position: absolute;
   left: 0;
   top: 0;
-  height: 100%;
-  aspect-ratio: 3 / 4;
-  --callout-gap: 14px; /* margen entre la capa y el punto de su etiqueta */
+  z-index: 9;
+  width: max-content;
+  opacity: 0;
+  transform: translate(-16px, -50%);
+  will-change: transform, opacity;
 }
-/* La foto del bar (el fotograma del vídeo que toca según el scroll) se funde con el fondo de la página por los
-   cuatro bordes: así no queda un rectángulo pegado y vale igual en el tema claro que en el oscuro. */
-.hero__photo {
-  position: absolute;
-  inset: 0;
-  -webkit-mask-image:
-    linear-gradient(to bottom, transparent 0%, #000 12%, #000 84%, transparent 100%),
-    linear-gradient(to right, transparent 0%, #000 9%, #000 91%, transparent 100%);
-  mask-image:
-    linear-gradient(to bottom, transparent 0%, #000 12%, #000 84%, transparent 100%),
-    linear-gradient(to right, transparent 0%, #000 9%, #000 91%, transparent 100%);
-  -webkit-mask-composite: source-in;
-  mask-composite: intersect;
+.hero__label .callout__text {
+  padding: 5px 9px;
+  border-radius: 4px;
+  color: #faf6ef;
+  background: rgba(11, 10, 9, 0.72);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
 }
-/* la hamburguesa: un canvas con el fotograma del vídeo que toca según el scroll */
-.hero__canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 7;
-  pointer-events: none;
+.hero__label .callout__line {
+  background: var(--bulb-cream);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.6);
 }
 @media (min-width: 900px) {
   .hero__label .callout__text {
     font-size: 14px;
   }
 }
-.hero__label {
-  position: absolute;
-  left: 0; /* el JS la coloca (transform) a --callout-gap del borde derecho de su capa */
-  top: 0;
-  z-index: 8;
-  width: max-content;
-  opacity: 0;
-  transform: translate(-16px, -50%);
-  will-change: transform, opacity;
-}
-/* encima de la foto las etiquetas llevan su propio fondo: se leen en los dos temas aunque pisen el bar */
-.hero__label .callout__text {
-  padding: 5px 9px;
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--bg) 84%, transparent);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
-}
-.hero__label .callout__line {
-  background: var(--bulb-cream);
-  box-shadow: 0 0 2px rgba(0, 0, 0, 0.6);
+@media (max-width: 639px) {
+  .hero__label .callout__text {
+    max-width: 118px;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+    padding: 4px 7px;
+  }
+  .hero__label .callout__line {
+    width: 14px;
+  }
 }
 
 /* ===== 02 Ticker ===== */
@@ -571,7 +538,8 @@
 /* ===== 04b Productos ===== */
 .products {
   position: relative;
-  height: 300vh;
+  /* un panel por pantalla; cada panel extra suma 80vh de scroll */
+  height: calc(100vh + (var(--n, 3) - 1) * 80vh);
 }
 .products__stage {
   position: sticky;
@@ -582,14 +550,14 @@
 }
 .products__track {
   display: flex;
-  width: 300%;
+  width: calc(var(--n, 3) * 100%);
   height: 100%;
   will-change: transform;
 }
 .product {
   position: relative;
   flex: none;
-  width: 33.3333%;
+  width: calc(100% / var(--n, 3));
   height: 100%;
   overflow: clip;
   --corner: currentColor;
@@ -667,6 +635,20 @@
   inset: 3%;
   will-change: transform;
 }
+.product__menu {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: inherit;
+  opacity: 0.85;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.product__menu:hover {
+  color: inherit;
+  opacity: 1;
+}
 @media (max-width: 639px) {
   .products {
     height: auto;
@@ -722,7 +704,7 @@
   position: relative;
   flex: none;
   width: min(54%, 50vmin);
-  aspect-ratio: 1200 / 1856; /* proporción del still abierto v3 */
+  aspect-ratio: 1200 / 1681; /* proporción de la Smash abierta (smash-abierta.webp) */
 }
 /* una imagen por tema: la del otro tema no se muestra */
 :root[data-theme="dark"] .inside__still--light,
@@ -841,7 +823,14 @@
 .fries__img {
   position: relative;
   width: min(100%, 52vmin);
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 3 / 4;
+}
+/* la foto de las patatas lleva su fondo: va como una foto pinchada, con marco y un poco girada */
+.fries__img > .slot {
+  border: 8px solid var(--paper);
+  border-radius: 6px;
+  box-shadow: 0 22px 44px rgba(0, 0, 0, 0.35);
+  transform: rotate(-3deg);
 }
 .fries__sparkle-a {
   top: 2%;
@@ -1853,6 +1842,43 @@
 .menu-cat--cheese .menu-item__desc,
 .menu-cat--red .menu-item__desc {
   opacity: 0.8;
+}
+/* bebidas: subgrupos en columnas, filas más apretadas */
+.menu-groups {
+  display: grid;
+  gap: 40px 48px;
+}
+.menu-group__title {
+  margin: 0 0 6px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid currentColor;
+  font-size: 13px;
+}
+.menu-cat--compacta .menu-item {
+  padding: 9px 0;
+}
+.menu-cat--compacta .menu-item__name {
+  font-size: 17px;
+}
+.menu-cat--compacta .menu-item__price {
+  font-size: 15px;
+}
+.menu-cat--compacta .menu-item__desc {
+  font-size: 14px;
+}
+.menu-cat--red .menu-item__desc {
+  opacity: 0.9;
+}
+@media (min-width: 900px) {
+  .menu-cat--compacta .menu-cat__grid {
+    grid-template-columns: 1fr;
+  }
+  .menu-cat--compacta .menu-cat__head {
+    position: static;
+  }
+  .menu-groups {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
 }
 .menu__close {
   padding-bottom: var(--sec-pb);

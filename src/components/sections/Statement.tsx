@@ -28,7 +28,7 @@ export default function Statement({ lang }: { lang: Lang }) {
         <div className="statement__art">
           <div className="statement__square">
             <div className="statement__photo">
-              <ImageSlot id="statement-mano-burger" alt={t.alts["statement-mano-burger"]} sizes="(max-width: 640px) 80vw, 60vmin" />
+              <ImageSlot id="volcano" alt={t.alts.volcano} sizes="(max-width: 640px) 80vw, 60vmin" />
             </div>
             <div className="sparkle pop statement__sparkle" data-reveal="1" aria-hidden="true" />
           </div>

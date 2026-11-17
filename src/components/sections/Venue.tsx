@@ -27,9 +27,9 @@ export default function Venue({ lang }: { lang: Lang }) {
               height={2048}
               sizes="(max-width: 640px) 90vw, 440px"
             />
-            {/* segunda foto, pinchada encima como una polaroid: la mesa con amigos */}
+            {/* segunda foto, pinchada encima como una polaroid: las costillas ahumadas del local (foto real) */}
             <div className="venue__extra" data-reveal="1">
-              <Image src="/images/mesa-amigos.webp" alt={t.venue.altTable} width={1800} height={1018} sizes="(max-width: 640px) 50vw, 260px" />
+              <Image src="/images/carta/costillas.webp" alt={t.venue.altTable} width={1100} height={1236} sizes="(max-width: 640px) 50vw, 260px" />
             </div>
           </div>
         </div>

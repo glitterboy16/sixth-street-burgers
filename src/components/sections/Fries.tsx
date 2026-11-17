@@ -13,7 +13,7 @@ export default function Fries({ lang }: { lang: Lang }) {
       <div className="fries__grid">
         <div className="fries__art">
           <div className="fries__img">
-            <ImageSlot id="patatas-cucurucho" alt={t.alts["patatas-cucurucho"]} sizes="(max-width: 640px) 80vw, 52vmin" />
+            <ImageSlot id="patatas" alt={t.alts.patatas} fit="cover" sizes="(max-width: 640px) 80vw, 52vmin" />
             <div className="sparkle pop fries__sparkle-a" data-reveal="1" aria-hidden="true" />
             <div className="sparkle pop fries__sparkle-b" data-reveal="1" aria-hidden="true" />
           </div>

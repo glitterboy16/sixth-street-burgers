@@ -20,18 +20,7 @@ export default function Inside({ lang }: { lang: Lang }) {
         </div>
         <div className="inside__art">
           <div className="inside__img">
-            <ImageSlot
-              id="que-lleva-render-abierta"
-              alt={t.alts["que-lleva-render-abierta"]}
-              sizes="(max-width: 640px) 60vw, 30vw"
-              className="inside__still inside__still--light"
-            />
-            <ImageSlot
-              id="que-lleva-render-abierta-oscuro"
-              alt={t.alts["que-lleva-render-abierta-oscuro"]}
-              sizes="(max-width: 640px) 60vw, 30vw"
-              className="inside__still inside__still--dark"
-            />
+            <ImageSlot id="que-lleva" alt={t.alts["que-lleva"]} sizes="(max-width: 640px) 60vw, 30vw" />
             <div className="sparkle" aria-hidden="true" />
           </div>
           <ul className="inside__list">

@@ -1,14 +1,18 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { products } from "@/data/site";
-import { homeHref } from "@/i18n/config";
+import { precio } from "@/data/carta";
+import { homeHref, menuHref } from "@/i18n/config";
 import { useLang } from "@/i18n/LangContext";
 import { clamp, onScroll, prefersReducedMotion, stageProgress } from "@/lib/motion";
 import Corner from "@/components/kit/Corner";
 import ImageSlot from "@/components/kit/ImageSlot";
 
+// Las hamburguesas reales de la carta en paneles a pantalla completa que pasan de lado con el scroll (en móvil
+// van apiladas). Los colores se repiten de tres en tres: teal, queso, rojo.
 const BTN = ["btn--paper", "btn--ink-cheese", "btn--ink-paper"];
+const SPARK = ["var(--cheese)", "var(--red)", "var(--teal)"];
 
 export default function Products() {
   const { lang, t } = useLang();
@@ -16,6 +20,7 @@ export default function Products() {
   const stage = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
   const photos = useRef<(HTMLDivElement | null)[]>([]);
+  const N = products.length;
 
   useEffect(() => {
     const sec = section.current,
@@ -28,70 +33,66 @@ export default function Products() {
     const update = () => {
       if (!pinned.matches) return; // en móvil los paneles van apilados (CSS)
       const p = stageProgress(sec, st);
-      tr.style.transform = `translateX(${(-p * 200) / 3}%)`;
-      for (let k = 0; k < 3; k++) {
-        const d = clamp(p * 2 - k, -1, 1);
+      tr.style.transform = `translateX(${(-p * (N - 1) * 100) / N}%)`;
+      for (let k = 0; k < N; k++) {
+        const d = clamp(p * (N - 1) - k, -1, 1);
         const ph = photos.current[k];
         if (ph) ph.style.transform = rm ? "" : `translateY(${-40 * d}px)`;
       }
     };
     return onScroll(update);
-  }, []);
+  }, [N]);
 
   return (
-    <section ref={section} className="products" aria-label={t.products.aria}>
+    <section ref={section} className="products" aria-label={t.products.aria} style={{ "--n": N } as CSSProperties}>
       <div ref={stage} className="products__stage">
         <div ref={track} className="products__track">
           {products.map((p, k) => {
-            const num = `0${k + 1}`;
-            const art = (
-              <div className="product__art">
-                <div className="product__square">
-                  <div
-                    ref={(el) => {
-                      photos.current[k] = el;
-                    }}
-                    className="product__photo"
-                  >
-                    <ImageSlot id={p.slot} alt={t.alts[p.slot]} shape="circle" sizes="(max-width: 640px) 90vw, 76vmin" />
-                  </div>
-                  {k === 0 && (
-                    <>
-                      <div className="sparkle" style={{ top: "-2%", right: "4%", width: 28, height: 28, background: "var(--cheese)" }} aria-hidden="true" />
-                      <div className="sparkle" style={{ bottom: "6%", left: "-3%", width: 18, height: 18, background: "var(--red)" }} aria-hidden="true" />
-                    </>
-                  )}
-                  {k === 1 && (
-                    <div className="sparkle" style={{ top: 0, left: "2%", width: 28, height: 28, background: "var(--red)" }} aria-hidden="true" />
-                  )}
-                  {k === 2 && (
-                    <div className="sparkle" style={{ bottom: "2%", right: 0, width: 28, height: 28, background: "var(--teal)" }} aria-hidden="true" />
-                  )}
-                </div>
-              </div>
-            );
-            const copy = (
-              <div className="product__copy">
-                <h3 id={`prod-${p.id}`} className="display">
-                  {p.name[0]}
-                  <br />
-                  {p.name[1]}
-                </h3>
-                <p className="product__desc">{t.products.desc[p.id]}</p>
-                <div className="product__buy">
-                  <span className="price">{p.price}</span>
-                  <a href={homeHref(lang, "#visitanos")} className={`btn ${BTN[k]}`}>
-                    {t.products.order} <span className="arr" aria-hidden="true">↗</span>
-                  </a>
-                </div>
-              </div>
-            );
+            const tone = k % 3;
             return (
-              <article key={p.id} className={`product product--${k + 1}`} aria-labelledby={`prod-${p.id}`}>
-                <Corner pos="br">{num} / 03</Corner>
+              <article key={p.id} className={`product product--${tone + 1}`} aria-labelledby={`prod-${p.id}`}>
+                <Corner pos="br">
+                  {String(k + 1).padStart(2, "0")} / {String(N).padStart(2, "0")}
+                </Corner>
                 <div className="product__inner">
-                  {copy}
-                  {art}
+                  <div className="product__copy">
+                    <h3 id={`prod-${p.id}`} className="display">
+                      {p.name[0]}
+                      {p.name[1] && (
+                        <>
+                          <br />
+                          {p.name[1]}
+                        </>
+                      )}
+                    </h3>
+                    <p className="product__desc">{t.products.desc[p.id]}</p>
+                    <div className="product__buy">
+                      <span className="price">{precio(p.price, lang)}</span>
+                      <a href={homeHref(lang, "#visitanos")} className={`btn ${BTN[tone]}`}>
+                        {t.products.order} <span className="arr" aria-hidden="true">↗</span>
+                      </a>
+                    </div>
+                    <a href={menuHref(lang)} className="product__menu mono">
+                      {t.products.menuLink} <span aria-hidden="true">→</span>
+                    </a>
+                  </div>
+                  <div className="product__art">
+                    <div className="product__square">
+                      <div
+                        ref={(el) => {
+                          photos.current[k] = el;
+                        }}
+                        className="product__photo"
+                      >
+                        <ImageSlot id={p.id} alt={t.alts[p.id]} sizes="(max-width: 640px) 90vw, 76vmin" />
+                      </div>
+                      <div
+                        className="sparkle"
+                        style={{ top: "4%", right: "6%", width: 28, height: 28, background: SPARK[tone] }}
+                        aria-hidden="true"
+                      />
+                    </div>
+                  </div>
                 </div>
               </article>
             );
