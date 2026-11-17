@@ -45,9 +45,7 @@ export default function Hero() {
   const titleA = useRef<HTMLHeadingElement>(null);
   const titleB = useRef<HTMLParagraphElement>(null);
   const cue = useRef<HTMLParagraphElement>(null);
-  const titles = useRef<HTMLDivElement>(null);
   const lead = useRef<HTMLParagraphElement>(null);
-  const actions = useRef<HTMLDivElement>(null);
   const labels = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
@@ -182,20 +180,6 @@ export default function Hero() {
     let secTop = 0,
       range = 1;
     let isMobile = window.innerWidth < 640;
-    // vertical (móvil): dónde acaban el titular y el texto y dónde empiezan los botones, en px del escenario
-    let titlesBottom = 0,
-      leadBottom = 0,
-      actionsTop = 1;
-    const offTop = (el: HTMLElement) => {
-      // offsetTop no depende de las animaciones de entrada ni de los transform
-      let y = 0;
-      let e: HTMLElement | null = el;
-      while (e && e !== st) {
-        y += e.offsetTop;
-        e = e.offsetParent as HTMLElement | null;
-      }
-      return y;
-    };
     const fit = () => {
       const want = choose();
       if (!pack || pack.set !== want.set || pack.size !== want.size || pack.hq !== want.hq) {
@@ -205,9 +189,6 @@ export default function Hero() {
       CW = st.clientWidth;
       CH = st.clientHeight;
       isMobile = window.innerWidth < 640;
-      titlesBottom = titles.current ? offTop(titles.current) + titles.current.offsetHeight : 0;
-      leadBottom = lead.current ? offTop(lead.current) + lead.current.offsetHeight : titlesBottom;
-      actionsTop = actions.current ? offTop(actions.current) : CH;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = Math.round(CW * dpr),
         h = Math.round(CH * dpr);
@@ -237,11 +218,12 @@ export default function Hero() {
       const L = (Math.min(o[0], c[0]) / 100) * FW + EXT,
         R = (Math.max(o[2], c[2]) / 100) * FW + EXT;
       const B = (Math.max(o[3], c[3]) / 100) * FH;
-      // altura que ocupa ahora la hamburguesa: la medida en cada fotograma ("tops"), para que el encuadre la siga
-      // exacta y el pan nunca se meta bajo la barra de arriba; si no hay medida, una curva de cerrada a abierta
+      // altura que ocupa ahora la hamburguesa. En apaisado (ordenador), la medida en cada fotograma ("tops"), para que
+      // el pan nunca se meta bajo la barra de arriba. En vertical (móvil), la curva suave de cerrada a abierta, igual
+      // que en la versión que gustó (sixth-street-burgers-aogvln6wv): el zoom va fluido, sin tirones
       const tops = (pk.set as { tops?: number[] }).tops;
       let Tp: number;
-      if (tops && tops.length === pk.N) {
+      if (landscape && tops && tops.length === pk.N) {
         const fi = ff * (pk.N - 1),
           i0 = Math.floor(fi),
           i1 = Math.min(pk.N - 1, i0 + 1);
@@ -250,28 +232,7 @@ export default function Hero() {
         Tp = c[1] + (o[1] - c[1]) * sm(ff, 0, 0.45);
       }
       const T = (Tp / 100) * FH;
-      if (!landscape) {
-        // VERTICAL (móvil y tablet de pie): la hamburguesa entera entre el titular (y el texto, mientras se ve) y los
-        // botones, para que «HECHA AL MOMENTO» y la hamburguesa abierta se vean sin pisarse. Si no cabe, la cámara se
-        // aleja y/o el vídeo baja un poco: arriba queda el fondo oscuro del bar, fundido con el vídeo.
-        const leadFade = sm(ff, 0.03, 0.16);
-        const topPx = titlesBottom + (leadBottom - titlesBottom) * (1 - leadFade) + 14;
-        const botPx = Math.max(CH - actionsTop, 0) + 14;
-        const band = Math.max(80, CH - topPx - botPx);
-        const zWant = 1 + (Z_MOVIL - 1) * (1 - sm(ff, 0, 0.6));
-        const zFit = band / ((B - T) * sCover);
-        const zMin = CW / (FW * sCover); // por debajo quedarían bandas a los lados
-        const z = Math.max(Math.min(zWant, zFit), zMin);
-        const s = sCover * z;
-        const fw = FW * s,
-          fh = FH * s;
-        let ox = CW / 2 - ((L + R) / 2) * s;
-        ox = clamp(ox, Math.min(CW - fw, 0), Math.max(CW - fw, 0));
-        let oy = topPx + (band - (B - T) * s) / 2 - T * s;
-        oy = clamp(oy, CH - fh, Math.max(CH - fh, 0.24 * CH));
-        return { dst: true, ox, oy, sx: 0, sy: 0, vw: 0, vh: 0, s, z };
-      }
-      const MT = 0.05,
+      const MT = landscape ? 0.05 : 0.04,
         MB = 0.1; // márgenes arriba y abajo, en fracción del alto de la pantalla
       let z = landscape && CW >= 900 ? Z_CERRADA + (Z_ABIERTA - Z_CERRADA) * sm(ff, 0.05, 0.95) : 1 + (Z_MOVIL - 1) * (1 - sm(ff, 0, 0.6));
       const zFit = (CH * (1 - MT - MB)) / ((B - T) * sCover); // zoom máximo con el que la hamburguesa cabe entera
@@ -477,7 +438,7 @@ export default function Hero() {
 
         <div className="hero__grid">
           <div ref={copy} className="hero__copy">
-            <div ref={titles} className="hero__titles hero__in" style={{ "--i": 0 } as React.CSSProperties}>
+            <div className="hero__titles hero__in" style={{ "--i": 0 } as React.CSSProperties}>
               <h1 ref={titleA} className="display">
                 {t.hero.titleA[0]}
                 <br />
@@ -493,7 +454,7 @@ export default function Hero() {
               {t.hero.lead}
             </p>
           </div>
-          <div ref={actions} className="hero__actions hero__in" style={{ "--i": 2 } as React.CSSProperties}>
+          <div className="hero__actions hero__in" style={{ "--i": 2 } as React.CSSProperties}>
             <a href="#carta" className="btn btn--primary">
               {t.hero.ctaMenu}
             </a>
