@@ -35,7 +35,7 @@ const fr: Dict = {
     lead: "Smash burgers à la plancha. Un diner américain de nuit, à Lanzarote.",
     ctaMenu: "Voir la carte",
     ctaMap: "Itinéraire",
-    labels: ["Pain brioché", "Salade & tomate", "Cheddar fondu", "Double smash de bœuf", "Pain à la sauce Sixth"],
+    labels: ["Brioche au beurre", "Oignons grillés", "Double smash & cheddar", "Bacon croustillant", "Sauce burger maison"],
     canvasAria: "Le smash burger de Sixth Street qui s'ouvre couche par couche au défilement",
   },
   statement: {

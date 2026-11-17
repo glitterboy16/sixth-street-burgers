@@ -36,7 +36,7 @@ const es = {
     lead: "Smash burgers a la plancha. Un diner americano de noche, en Lanzarote.",
     ctaMenu: "Ver la carta",
     ctaMap: "Cómo llegar",
-    labels: ["Pan brioche", "Lechuga y tomate", "Cheddar fundido", "Doble smash de ternera", "Pan con salsa Sixth"],
+    labels: ["Brioche de mantequilla", "Cebolla a la plancha", "Doble smash con cheddar", "Bacon crujiente", "Salsa burger casera"],
     canvasAria: "La smash burger de Sixth Street abriéndose por capas al hacer scroll",
   },
   statement: {

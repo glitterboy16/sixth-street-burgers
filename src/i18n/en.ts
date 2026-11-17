@@ -35,7 +35,7 @@ const en: Dict = {
     lead: "Griddle-smashed burgers. An American diner by night, in Lanzarote.",
     ctaMenu: "See the menu",
     ctaMap: "Get directions",
-    labels: ["Brioche bun", "Lettuce & tomato", "Melted cheddar", "Double beef smash", "Bun with Sixth sauce"],
+    labels: ["Butter brioche bun", "Grilled onions", "Double smash & cheddar", "Crispy bacon", "Homemade burger sauce"],
     canvasAria: "The Sixth Street smash burger opening up layer by layer as you scroll",
   },
   statement: {

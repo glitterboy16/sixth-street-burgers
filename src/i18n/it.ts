@@ -35,7 +35,7 @@ const it: Dict = {
     lead: "Smash burger alla piastra. Un diner americano di notte, a Lanzarote.",
     ctaMenu: "Vedi il menù",
     ctaMap: "Come arrivare",
-    labels: ["Pane brioche", "Lattuga e pomodoro", "Cheddar fuso", "Doppio smash di manzo", "Pane con salsa Sixth"],
+    labels: ["Brioche al burro", "Cipolla alla piastra", "Doppio smash e cheddar", "Bacon croccante", "Salsa burger della casa"],
     canvasAria: "Lo smash burger di Sixth Street che si apre strato per strato mentre scorri",
   },
   statement: {

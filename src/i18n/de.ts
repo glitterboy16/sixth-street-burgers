@@ -35,7 +35,7 @@ const de: Dict = {
     lead: "Smash Burger von der Plancha. Ein American Diner bei Nacht, auf Lanzarote.",
     ctaMenu: "Zur Karte",
     ctaMap: "Anfahrt",
-    labels: ["Brioche-Bun", "Salat & Tomate", "Geschmolzener Cheddar", "Doppeltes Rind-Smash", "Bun mit Sixth-Sauce"],
+    labels: ["Butter-Brioche", "Gegrillte Zwiebeln", "Doppel-Smash mit Cheddar", "Knuspriger Bacon", "Hausgemachte Burgersauce"],
     canvasAria: "Der Smash Burger von Sixth Street öffnet sich beim Scrollen Schicht für Schicht",
   },
   statement: {

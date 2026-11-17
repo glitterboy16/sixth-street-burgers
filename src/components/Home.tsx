@@ -17,8 +17,7 @@ import MapSection from "@/components/sections/MapSection";
 import Footer from "@/components/sections/Footer";
 import Reveals from "@/components/Reveals";
 import Boot from "@/components/Boot";
-import { FRAMES } from "@/data/frames";
-import { FRAMES_DARK } from "@/data/frames-dark";
+import { FRAMES_FOTO } from "@/data/frames-foto";
 import { schedule, site } from "@/data/site";
 import { dict, homeHref, menuHref, type Lang } from "@/i18n";
 import { SITE_URL } from "@/i18n/meta";
@@ -28,8 +27,8 @@ const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 // Precarga del primer fotograma del hero (el LCP) elegido como lo hará Hero.tsx: juego del tema activo y tamaño
 // según pantalla (h escritorio, d móvil de alta densidad, m móvil de baja). Antes se precargaba siempre el 2K
 // oscuro, que en un iPhone claro eran 300 KB tirados.
-const first = (set: typeof FRAMES) => ({ h: set.path(0, "h"), d: set.path(0, "d"), m: set.path(0, "m") });
-const preloadScript = `(function(){try{var F=${JSON.stringify({ dark: first(FRAMES_DARK), light: first(FRAMES) })};var dark=document.documentElement.dataset.theme!=="light";var s=innerWidth<640?((devicePixelRatio||1)<2?"m":"d"):"h";var l=document.createElement("link");l.rel="preload";l.as="image";l.fetchPriority="high";l.href=${JSON.stringify(BASE)}+F[dark?"dark":"light"][s];document.head.appendChild(l)}catch(e){}})();`;
+const FIRST = { h: FRAMES_FOTO.path(0, "h"), d: FRAMES_FOTO.path(0, "d"), m: FRAMES_FOTO.path(0, "m") };
+const preloadScript = `(function(){try{var F=${JSON.stringify(FIRST)};var s=innerWidth<640?((devicePixelRatio||1)<2?"m":"d"):"h";var l=document.createElement("link");l.rel="preload";l.as="image";l.fetchPriority="high";l.href=${JSON.stringify(BASE)}+F[s];document.head.appendChild(l)}catch(e){}})();`;
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
