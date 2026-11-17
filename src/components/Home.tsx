@@ -4,7 +4,6 @@ import Ticker from "@/components/sections/Ticker";
 import Statement from "@/components/sections/Statement";
 import Choose from "@/components/sections/Choose";
 import Products from "@/components/sections/Products";
-import Inside from "@/components/sections/Inside";
 import BigType from "@/components/sections/BigType";
 import Fries from "@/components/sections/Fries";
 import Venue from "@/components/sections/Venue";
@@ -82,7 +81,6 @@ export default function Home({ lang }: { lang: Lang }) {
         <Statement lang={lang} />
         <Choose lang={lang} />
         <Products />
-        <Inside lang={lang} />
         <BigType lang={lang} />
         <Fries lang={lang} />
         <Venue lang={lang} />
