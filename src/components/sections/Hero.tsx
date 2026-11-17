@@ -1,63 +1,34 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import CAPAS from "@/data/hero-capas.json";
+import ANCHO from "@/data/hero-ancho.json";
+import ALTO from "@/data/hero-alto.json";
 import { site } from "@/data/site";
 import { useLang } from "@/i18n/LangContext";
 import { markReady } from "@/lib/boot";
 import { clamp, navH, prefersReducedMotion, sm } from "@/lib/motion";
-import { Z_ABIERTA, Z_CERRADA, Z_MOVIL } from "./hero-zoom";
+import { AMPLIACION_MAX, Z_ABIERTA, Z_CERRADA, Z_MOVIL } from "./hero-zoom";
 import Corner from "@/components/kit/Corner";
 import TodayHours from "@/components/kit/TodayHours";
 
-// La portada es la Smash Burger del local en su mesa del bar, a pantalla completa, abriéndose por capas con el scroll.
-// No es un vídeo: es UNA foto 4K del despiece recortada en capas (renders/capas/recortar_capas.py y exportar_web.py):
-// un fondo fijo (bar, papel, pan de abajo y bacon) y cuatro capas que se mueven (carnes con cheddar, loncha de
-// queso, cebolla y pan de arriba). Cada capa es siempre la misma imagen nítida: nada cambia de forma ni pierde
-// resolución, y todo pesa menos de 1 MB. Entre la loncha y la carne, hilos de queso que se estiran y se rompen.
+// La portada es la Smash Burger real del local en su mesa del bar, a pantalla completa: un vídeo generado a partir
+// de la foto (cerrada → abierta por capas, con los hilos de queso) troceado en fotogramas WebP por
+// scripts/frames-hero.mjs. El scroll elige el fotograma y lo pinta en un canvas que cubre todo el escenario.
 //
-// Hay dos fondos: "ancho" (escritorio y tablet apaisada) y "alto" (móvil y tablet de pie), elegidos por la
-// proporción de la pantalla y pintados tipo "cover". Las capas son las mismas para los dos: cada fondo dice cómo
-// pasar de px de la escena de capas a px de su imagen (xf = [escala, x, y]).
-type LayerId = "carne" | "queso" | "cebolla" | "pan";
-type SceneId = "ancho" | "alto";
-const ORDER: LayerId[] = ["carne", "queso", "cebolla", "pan"]; // de atrás adelante
-const LH = CAPAS.layerScene[1];
-const pct = (v: number) => (v / 100) * LH;
-// Desplazamiento vertical de cada capa respecto a su sitio en la foto del despiece, en % del alto de la escena de
-// capas (+ = abajo). Cerrada: las capas apiladas sobre el bacon. Abierta: separadas con aire entre ellas.
-const CLOSED: Record<LayerId, number> = { carne: 0, queso: 6.5, cebolla: 9.7, pan: 14.7 };
-// En apaisado la torre abierta tiene que caber en el poco alto de una pantalla ancha (también panorámica): se separa
-// menos, pero la carne se queda sobre el bacon para que entre la loncha y la carne haya hueco para los hilos.
-const OPEN: Record<SceneId, Record<LayerId, number>> = {
-  alto: { carne: -2, queso: -6.5, cebolla: -7.5, pan: -8.5 },
-  ancho: { carne: 0, queso: -3.5, cebolla: -4.5, pan: -5 },
-};
-// Cuándo sube cada capa a lo largo de la apertura (0-1): primero el pan y la cebolla, el queso y la carne detrás.
-const TIMING: Record<LayerId, [number, number]> = { pan: [0, 0.72], cebolla: [0.05, 0.8], queso: [0.11, 0.88], carne: [0.18, 0.96] };
-// Etiquetas, en el orden de i18n (pan, cebolla, carne, bacon, salsa): ancla en px de la escena de capas y capa que la mueve
-const LABELS: { anchor: keyof typeof CAPAS.anchors; layer?: LayerId }[] = [
-  { anchor: "pan", layer: "pan" },
-  { anchor: "cebolla", layer: "cebolla" },
-  { anchor: "carne", layer: "carne" },
-  { anchor: "bacon" },
-  { anchor: "salsa" },
-];
-// Hilos de queso entre la loncha y la carne (renders/capas/hilos/): cada hilo cuelga de la loncha y se apoya en la
-// carne, así que se estira cuando se separan; después se rompe, cada uno en su momento (no todos a la vez), y se
-// recoge hacia la loncha. SNAP = apertura (0-1) a la que se rompe cada hilo, en el orden de izquierda a derecha.
-const HILOS = CAPAS.hilos;
-const SNAP = [0.8, 0.72, 0.88, 0.76, 0.93, 0.84];
+// Hay dos encuadres del mismo vídeo: "ancho" (16:9, escritorio y tablet apaisada) y "alto" (9:16, móvil y tablet
+// de pie). Se elige por la proporción de la pantalla y se pinta tipo "cover": el fotograma llena siempre el
+// escenario hasta los bordes y se recorta lo que sobra, pero nunca la hamburguesa (zona segura). El fondo es el
+// mismo en el primer y el último fotograma: la mesa y el bar no se mueven, solo suben las capas.
+type Set = typeof ANCHO;
+const SETS: Record<"ancho" | "alto", Set> = { ancho: ANCHO, alto: ALTO as Set };
+type SizeKey = "h" | "m";
+// Opcional: prolongación fija del bar a la izquierda del vídeo apaisado, para vídeos que traen la hamburguesa centrada
+// (en ordenador va a la derecha, con el texto encima del bar). Solo si el manifiesto trae "plate" (frames-hero.mjs
+// --plate); el vídeo actual ya tiene el bar a la izquierda y no la usa.
+type Plate = { ext: number; fade: number };
+const plateOf = (set: Set): Plate | undefined => (set as { plate?: Plate }).plate;
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-const url = (p: string) => `${BASE}${p}?v=${CAPAS.stamp}`;
-
-const loadImage = (src: string) =>
-  new Promise<HTMLImageElement>((resolve, reject) => {
-    const im = new window.Image();
-    im.decoding = "async";
-    im.src = src;
-    im.decode().then(() => resolve(im), reject);
-  });
+const pathOf = (set: Set, size: SizeKey, i: number) => `${BASE}/frames/${set.set}/${size}/frame_${String(i).padStart(3, "0")}.webp?v=${set.stamp}`;
 
 export default function Hero() {
   const { t } = useLang();
@@ -80,44 +51,92 @@ export default function Hero() {
 
     const rm = prefersReducedMotion();
     let disposed = false;
-    let ready = false;
+    let frameReady = false;
 
-    // ── imágenes: las capas (compartidas) y el fondo de la escena según la forma de la pantalla ────────────
-    const layerImg: Partial<Record<LayerId, HTMLImageElement>> = {};
-    const baseImg: Partial<Record<SceneId, HTMLImageElement>> = {};
-    let scene: SceneId = window.innerWidth > window.innerHeight ? "ancho" : "alto";
-    const loadScene = (id: SceneId) => {
-      if (baseImg[id]) return;
-      loadImage(url(CAPAS.scenes[id].base)).then(
-        (im) => {
-          if (disposed) return;
-          baseImg[id] = im;
-          draw();
-        },
-        () => {},
-      );
+    // ── juego de fotogramas según la forma de la pantalla ───────────────────────────────────────────────
+    type Pack = {
+      set: Set;
+      size: SizeKey;
+      FW: number;
+      FH: number;
+      N: number;
+      frames: (HTMLImageElement | null)[];
+      order: number[];
+      next: number;
+      inflight: number;
+      EXT: number; // px de prolongación a la izquierda (0 si no hay)
+      F: number; // px de fundido de la prolongación sobre el vídeo
+      plate: HTMLImageElement | null;
     };
-    for (const id of ORDER) {
-      loadImage(url(`/hero/capas/${id}.webp`)).then(
-        (im) => {
-          if (disposed) return;
-          layerImg[id] = im;
-          draw();
-        },
-        () => {},
-      );
-    }
-    const hiloImg: (HTMLImageElement | null)[] = HILOS.list.map(() => null);
-    HILOS.list.forEach((h, i) => {
-      loadImage(url(h.src)).then(
-        (im) => {
-          if (disposed) return;
-          hiloImg[i] = im;
-          draw();
-        },
-        () => {},
-      );
-    });
+    let pack: Pack | null = null;
+    const choose = (): { set: Set; size: SizeKey } => {
+      // misma regla que el CSS (@media (max-aspect-ratio: 1/1)): proporción de la ventana, no del escenario
+      const set = window.innerWidth > window.innerHeight ? SETS.ancho : SETS.alto;
+      // tamaño: el grande si el pequeño se vería ampliado con el zoom de partida (misma cuenta que la precarga de Home)
+      const W = st.clientWidth,
+        H = st.clientHeight;
+      const z = set === SETS.ancho && W >= 900 ? Z_CERRADA : Z_MOVIL;
+      const m = set.sizes.m;
+      const k = Math.max(W / (m.width * (1 + (plateOf(set)?.ext ?? 0))), H / m.height) * z * Math.min(window.devicePixelRatio || 1, 2);
+      return { set, size: k > AMPLIACION_MAX ? "h" : "m" };
+    };
+    const makePack = (set: Set, size: SizeKey): Pack => {
+      const { width, height, count } = set.sizes[size];
+      const order: number[] = [];
+      const seen = new Set<number>();
+      const push = (i: number) => {
+        if (i >= 0 && i < count && !seen.has(i)) {
+          seen.add(i);
+          order.push(i);
+        }
+      };
+      push(0);
+      push(count - 1);
+      for (const step of [16, 8, 4, 2, 1]) for (let i = 0; i < count; i += step) push(i);
+      const pl = plateOf(set);
+      const pk: Pack = {
+        set, size, FW: width, FH: height, N: count, frames: Array(count).fill(null), order, next: 0, inflight: 0,
+        EXT: pl ? pl.ext * width : 0, F: pl ? pl.fade * width : 0, plate: null,
+      };
+      if (pl) {
+        const im = new window.Image();
+        im.decoding = "async";
+        im.src = `${BASE}/frames/${set.set}/plate-${size}.webp?v=${set.stamp}`;
+        im.decode().then(
+          () => {
+            if (disposed || pk !== pack) return;
+            pk.plate = im;
+            drawn = -1;
+            draw();
+          },
+          () => {},
+        );
+      }
+      return pk;
+    };
+    const pump = (pk: Pack) => {
+      while (!disposed && pk === pack && pk.inflight < 6 && pk.next < pk.order.length) {
+        const i = pk.order[pk.next++];
+        pk.inflight++;
+        const im = new window.Image();
+        im.decoding = "async";
+        im.src = pathOf(pk.set, pk.size, i);
+        im.decode().then(
+          () => {
+            pk.inflight--;
+            if (disposed || pk !== pack) return;
+            pk.frames[i] = im;
+            drawn = -1;
+            draw();
+            pump(pk);
+          },
+          () => {
+            pk.inflight--;
+            pump(pk);
+          },
+        );
+      }
+    };
 
     // ── geometría ─────────────────────────────────────────────────────────────────────────────────────
     let CW = 1,
@@ -126,9 +145,11 @@ export default function Hero() {
       range = 1;
     let isMobile = window.innerWidth < 640;
     const fit = () => {
-      // misma regla que el CSS (@media (max-aspect-ratio: 1/1)): proporción de la ventana, no del escenario
-      scene = window.innerWidth > window.innerHeight ? "ancho" : "alto";
-      loadScene(scene);
+      const want = choose();
+      if (!pack || pack.set !== want.set || pack.size !== want.size) {
+        pack = makePack(want.set, want.size);
+        pump(pack);
+      }
       CW = st.clientWidth;
       CH = st.clientHeight;
       isMobile = window.innerWidth < 640;
@@ -138,114 +159,103 @@ export default function Hero() {
       if (cv.width !== w || cv.height !== h) {
         cv.width = w;
         cv.height = h;
+        ctx.imageSmoothingQuality = "high";
       }
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = "high";
       const r = sec.getBoundingClientRect();
       secTop = r.top + window.scrollY;
       range = Math.max(1, r.height - st.offsetHeight);
+      drawn = -1;
     };
 
-    // desplazamiento de una capa (px de la escena de capas) con la apertura ff (0 cerrada, 1 abierta)
-    const offset = (id: LayerId, ff: number) => {
-      const [a, b] = TIMING[id];
-      const e = sm(ff, a, b);
-      return pct(CLOSED[id] + (OPEN[scene][id] - CLOSED[id]) * e);
-    };
-
-    // Ventana de recorte "cover" con la hamburguesa entera dentro (márgenes arriba y abajo) y hacia la derecha en
-    // apaisado. La altura de la torre se calcula EXACTA en cada momento a partir de la posición de las capas.
+    // Ventana de recorte "cover" con la hamburguesa en zona segura. Devuelve, en px del fotograma, la esquina y el
+    // tamaño del trozo visible. La hamburguesa (unión de cerrada y abierta) se coloca hacia la derecha en apaisado
+    // (el texto va a la izquierda) y centrada en vertical; si la pantalla es más estrecha que la zona segura, manda
+    // que se vea entera antes que la posición.
     const view = (ff: number) => {
-      const sc = CAPAS.scenes[scene];
-      const [FW, FH] = sc.size;
-      const [xs, tx, ty] = sc.xf;
-      const landscape = scene === "ancho";
-      const sCover = Math.max(CW / FW, CH / FH);
-      let L = Infinity,
-        R = -Infinity,
-        T = Infinity;
-      for (const id of ORDER) {
-        const [bx, by, bw] = CAPAS.layers[id].box;
-        L = Math.min(L, bx * xs + tx);
-        R = Math.max(R, (bx + bw) * xs + tx);
-        T = Math.min(T, (by + offset(id, ff)) * xs + ty);
-      }
-      const B = CAPAS.bottom * xs + ty;
-      const MT = landscape ? 0.05 : 0.04,
-        MB = landscape ? 0.06 : 0.1; // márgenes arriba y abajo, en fracción del alto de la pantalla
+      const pk = pack!;
+      const { FW, FH, EXT } = pk;
+      const VW = FW + EXT; // ancho disponible: prolongación + vídeo
+      const landscape = pk.set.set === "ancho";
+      const sCover = Math.max(CW / VW, CH / FH);
+      const o = pk.set.open,
+        c = pk.set.closed;
+      const L = (Math.min(o[0], c[0]) / 100) * FW + EXT,
+        R = (Math.max(o[2], c[2]) / 100) * FW + EXT;
+      const B = (Math.max(o[3], c[3]) / 100) * FH;
+      // altura que ocupa ahora la hamburguesa: de la cerrada a la abierta (la corona sube casi toda en la primera mitad)
+      const T = ((c[1] + (o[1] - c[1]) * sm(ff, 0, 0.45)) / 100) * FH;
+      const MT = 0.04,
+        MB = 0.1; // márgenes arriba y abajo, en fracción del alto de la pantalla
       let z = landscape && CW >= 900 ? Z_CERRADA + (Z_ABIERTA - Z_CERRADA) * sm(ff, 0.05, 0.95) : 1 + (Z_MOVIL - 1) * (1 - sm(ff, 0, 0.6));
       const zFit = (CH * (1 - MT - MB)) / ((B - T) * sCover); // zoom máximo con el que la hamburguesa cabe entera
       z = Math.max(1, Math.min(z, zFit));
       const s = sCover * z;
       const vw = CW / s,
         vh = CH / s;
-      const cx = landscape && CW >= 900 ? 0.68 : 0.5; // dónde cae el centro de la hamburguesa en la pantalla
-      let sx = (L + R) / 2 - cx * vw;
+      const tx = landscape && CW >= 900 ? 0.68 : 0.5; // dónde cae el centro de la hamburguesa en la pantalla
+      let sx = (L + R) / 2 - tx * vw;
+      // la hamburguesa entera si cabe: sx entre "se ve el borde derecho" y "se ve el borde izquierdo"
       const sxMin = R + 8 / s - vw,
         sxMax = L - 8 / s;
       sx = clamp(sx, Math.min(sxMin, sxMax), Math.max(sxMin, sxMax));
-      sx = clamp(sx, 0, FW - vw);
+      sx = clamp(sx, 0, VW - vw);
       let sy = (T + B) / 2 - 0.5 * vh + ((MB - MT) / 2) * vh;
       sy = clamp(sy, Math.min(B + MB * vh - vh, T - MT * vh), Math.max(B + MB * vh - vh, T - MT * vh));
       sy = clamp(sy, 0, FH - vh);
-      return { sx, sy, vw, vh, s, xs, tx, ty };
+      return { sx, sy, vw, vh, s, z };
     };
 
+    let drawn = -1;
     let target = rm ? 1 : 0;
     let p = target;
     let raf = 0;
     let last = 0;
 
+    const near = (pk: Pack, i: number) => {
+      for (let d = 0; d < pk.N; d++) {
+        if (pk.frames[i - d]) return i - d;
+        if (pk.frames[i + d]) return i + d;
+      }
+      return -1;
+    };
+
     const draw = () => {
-      const base = baseImg[scene];
-      if (!base || ORDER.some((id) => !layerImg[id])) return; // se pinta todo junto, nunca a medias
+      const pk = pack;
+      if (!pk) return;
       const ff = sm(p, 0.04, 0.84); // 0 cerrada, 1 abierta; se queda abierta hasta el final
+      const want = Math.round(ff * (pk.N - 1));
+      const i = near(pk, want);
       const v = view(ff);
-      const k = cv.width / v.vw; // px del canvas por px del fondo
-      ctx.drawImage(base, v.sx, v.sy, v.vw, v.vh, 0, 0, cv.width, cv.height);
-      const drawLayer = (id: LayerId) => {
-        const [bx, by, bw, bh] = CAPAS.layers[id].box;
-        const x = bx * v.xs + v.tx,
-          y = (by + offset(id, ff)) * v.xs + v.ty;
-        ctx.drawImage(layerImg[id]!, (x - v.sx) * k, (y - v.sy) * k, bw * v.xs * k, bh * v.xs * k);
-      };
-      drawLayer("carne");
-      // hilos: entre la carne (detrás) y la loncha (delante, tapa su arranque)
-      const dq = offset("queso", ff) - HILOS.ref.queso,
-        dc = offset("carne", ff) - HILOS.ref.carne;
-      HILOS.list.forEach((h, i) => {
-        const im = hiloImg[i];
-        if (!im) return;
-        const [hx, hy, hw, hh] = h.box;
-        const top = hy + dq,
-          len = hy + hh + dc - top; // de la loncha a la carne, en px de la escena de capas
-        const r = len / hh;
-        const snap = sm(ff, SNAP[i % SNAP.length], SNAP[i % SNAP.length] + 0.06);
-        const a = sm(r, 0.06, 0.22) * (1 - snap);
-        if (a <= 0.01 || len <= 1) return;
-        const drawn = len * (1 - 0.6 * snap); // al romperse se recoge hacia la loncha
-        ctx.globalAlpha = a;
-        ctx.drawImage(im, (hx * v.xs + v.tx - v.sx) * k, (top * v.xs + v.ty - v.sy) * k, hw * v.xs * k, drawn * v.xs * k);
-        ctx.globalAlpha = 1;
-      });
-      drawLayer("queso");
-      drawLayer("cebolla");
-      drawLayer("pan");
-      if (!ready) {
-        ready = true;
-        markReady("frame");
+      if (i >= 0 && (frameReady || Math.abs(i - want) <= 2)) {
+        const key = i * 10000 + Math.round(v.sx) + Math.round(v.sy) * 7 + Math.round(v.z * 1000) * 13 + (pk.plate ? 0.5 : 0);
+        if (key !== drawn) {
+          drawn = key;
+          if (!pk.EXT) {
+            ctx.drawImage(pk.frames[i]!, v.sx, v.sy, v.vw, v.vh, 0, 0, cv.width, cv.height);
+          } else {
+            // vídeo desplazado a la derecha y la prolongación del bar encima, fundida por su borde derecho
+            const k = cv.width / v.vw;
+            const dy = -v.sy * k;
+            ctx.fillStyle = "#0b0a09";
+            ctx.fillRect(0, 0, cv.width, cv.height);
+            ctx.drawImage(pk.frames[i]!, (pk.EXT - v.sx) * k, dy, pk.FW * k, pk.FH * k);
+            if (pk.plate) ctx.drawImage(pk.plate, -v.sx * k, dy, (pk.EXT + pk.F) * k, pk.FH * k);
+          }
+        }
+        if (!frameReady) {
+          frameReady = true;
+          markReady("frame");
+        }
       }
 
-      // etiquetas: punto a la derecha de su pieza (en px de pantalla), texto dentro de la pantalla
+      // etiquetas: punto a la derecha de su capa (en px de pantalla), texto dentro de la pantalla
       const gap = isMobile ? 6 : 14;
-      labels.current.forEach((el, i) => {
+      labels.current.forEach((el, k) => {
         if (!el) return;
-        const l = LABELS[i];
-        const [axL, ayL] = CAPAS.anchors[l.anchor];
-        const dy = l.layer ? offset(l.layer, ff) : 0;
-        const a = sm(ff, 0.72 + i * 0.04, 0.84 + i * 0.04);
-        const x = (axL * v.xs + v.tx - v.sx) * v.s + gap;
-        const y = ((ayL + dy) * v.xs + v.ty - v.sy) * v.s;
+        const l = pk.set.labels[k];
+        const a = sm(ff, 0.72 + k * 0.04, 0.84 + k * 0.04);
+        const x = ((l.right / 100) * pk.FW + pk.EXT - v.sx) * v.s + gap;
+        const y = ((l.y / 100) * pk.FH - v.sy) * v.s;
         const w = el.offsetWidth;
         const xx = Math.min(x, CW - w - 10);
         el.style.opacity = String(a);
@@ -258,7 +268,8 @@ export default function Hero() {
       if (cue.current) cue.current.style.opacity = String(1 - sm(p, 0, 0.08));
       // en vertical el texto va encima de la hamburguesa: se aparta cuando las capas suben
       if (copy.current) {
-        const fade = scene === "alto" ? sm(ff, 0.12, 0.42) : 0;
+        const portrait = pk.set.set === "alto";
+        const fade = portrait ? sm(ff, 0.12, 0.42) : 0;
         copy.current.style.opacity = String(1 - fade);
         copy.current.style.transform = fade ? `translateY(${-24 * fade}px)` : "";
       }
