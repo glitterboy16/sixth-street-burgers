@@ -27,13 +27,20 @@ const OUT = path.resolve(`public/frames/${SET}`);
 const MANIFEST = path.resolve(`src/data/hero-${SET}.json`);
 const STAMP = Date.now().toString(36);
 // h: pantallas grandes o de alta densidad; m: el resto (la web elige según los píxeles reales del canvas)
-const SIZES = SET === "ancho" ? { h: [1920, 1080, 74], m: [1280, 720, 74] } : { h: [1080, 1920, 74], m: [720, 1280, 72] };
+// proporción nativa del vídeo de MiniMax H3 2K (2544×1456)
+const SIZES = SET === "ancho" ? { h: [1920, 1099, 76], m: [1280, 733, 74] } : { h: [1099, 1920, 76], m: [733, 1280, 74] };
+// --vf: filtro de ffmpeg al extraer (p. ej. "eq=gamma=1.12" para igualar el brillo de la foto de partida)
+const VF = arg("vf", "");
+// --plate DIR (solo "ancho"): prolongación del bar a la izquierda hecha con renders/smash-fondo/herramientas/
+// placa_izquierda.py (DIR/placa.png con alfa + DIR/placa.json { ext, fade } en fracción del ancho del vídeo).
+// Escribe public/frames/ancho/plate-{h,m}.webp y añade "plate" al manifiesto.
+const PLATE = arg("plate", "");
 
 const tmp = path.join(os.tmpdir(), `ssb-frames-${SET}`);
 fs.rmSync(tmp, { recursive: true, force: true });
 fs.mkdirSync(tmp, { recursive: true });
 console.log("extrayendo", VIDEO);
-execFileSync("ffmpeg", ["-v", "error", "-y", "-i", VIDEO, "-fps_mode", "passthrough", path.join(tmp, "f_%04d.png")], { stdio: "inherit" });
+execFileSync("ffmpeg", ["-v", "error", "-y", "-i", VIDEO, ...(VF ? ["-vf", VF] : []), "-fps_mode", "passthrough", path.join(tmp, "f_%04d.png")], { stdio: "inherit" });
 const files = fs.readdirSync(tmp).filter((f) => f.endsWith(".png")).sort();
 console.log(files.length, "fotogramas");
 
@@ -59,7 +66,17 @@ await Promise.all(
 
 const sizes = {};
 for (const [s, [W, H]] of Object.entries(SIZES)) sizes[s] = { width: W, height: H, count: files.length };
-fs.writeFileSync(MANIFEST, JSON.stringify({ set: SET, stamp: STAMP, sizes, closed: META.closed, open: META.open, labels: META.labels }, null, 1) + "\n");
+let plate;
+if (PLATE) {
+  plate = JSON.parse(fs.readFileSync(path.join(PLATE, "placa.json"), "utf8"));
+  for (const [s, [W, H, q]] of Object.entries(SIZES)) {
+    await sharp(path.join(PLATE, "placa.png"))
+      .resize(Math.round((plate.ext + plate.fade) * W), H, { fit: "fill", kernel: "lanczos3" })
+      .webp({ quality: q + 4, alphaQuality: 90, effort: 5, smartSubsample: true })
+      .toFile(path.join(OUT, `plate-${s}.webp`));
+  }
+}
+fs.writeFileSync(MANIFEST, JSON.stringify({ set: SET, stamp: STAMP, sizes, closed: META.closed, open: META.open, labels: META.labels, ...(plate ? { plate } : {}) }, null, 1) + "\n");
 for (const s of Object.keys(SIZES)) {
   const dir = path.join(OUT, s);
   const total = fs.readdirSync(dir).reduce((a, f) => a + fs.statSync(path.join(dir, f)).size, 0);

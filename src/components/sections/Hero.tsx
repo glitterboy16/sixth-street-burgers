@@ -7,6 +7,7 @@ import { site } from "@/data/site";
 import { useLang } from "@/i18n/LangContext";
 import { markReady } from "@/lib/boot";
 import { clamp, navH, prefersReducedMotion, sm } from "@/lib/motion";
+import { AMPLIACION_MAX, Z_ABIERTA, Z_CERRADA, Z_MOVIL } from "./hero-zoom";
 import Corner from "@/components/kit/Corner";
 import TodayHours from "@/components/kit/TodayHours";
 
@@ -21,13 +22,12 @@ import TodayHours from "@/components/kit/TodayHours";
 type Set = typeof ANCHO;
 const SETS: Record<"ancho" | "alto", Set> = { ancho: ANCHO, alto: ALTO as Set };
 type SizeKey = "h" | "m";
+// Opcional: prolongación fija del bar a la izquierda del vídeo apaisado, para vídeos que traen la hamburguesa centrada
+// (en ordenador va a la derecha, con el texto encima del bar). Solo si el manifiesto trae "plate" (frames-hero.mjs
+// --plate); el vídeo actual ya tiene el bar a la izquierda y no la usa.
+type Plate = { ext: number; fade: number };
+const plateOf = (set: Set): Plate | undefined => (set as { plate?: Plate }).plate;
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-// Zoom sobre el encuadre "cover". Apaisado (ordenador): la hamburguesa empieza cerca (Z_CERRADA) y la cámara se
-// acerca todavía más mientras se abre (Z_ABIERTA), sin perder el bar de fondo. Vertical (móvil): empieza un poco
-// cerca y se aleja al abrirse. En los dos casos el zoom nunca deja que la hamburguesa se salga de la pantalla.
-const Z_CERRADA = 1.28;
-const Z_ABIERTA = 1.42;
-const Z_MOVIL = 1.06;
 const pathOf = (set: Set, size: SizeKey, i: number) => `${BASE}/frames/${set.set}/${size}/frame_${String(i).padStart(3, "0")}.webp?v=${set.stamp}`;
 
 export default function Hero() {
@@ -64,15 +64,21 @@ export default function Hero() {
       order: number[];
       next: number;
       inflight: number;
+      EXT: number; // px de prolongación a la izquierda (0 si no hay)
+      F: number; // px de fundido de la prolongación sobre el vídeo
+      plate: HTMLImageElement | null;
     };
     let pack: Pack | null = null;
     const choose = (): { set: Set; size: SizeKey } => {
       // misma regla que el CSS (@media (max-aspect-ratio: 1/1)): proporción de la ventana, no del escenario
       const set = window.innerWidth > window.innerHeight ? SETS.ancho : SETS.alto;
-      // tamaño: el grande si el canvas necesita más píxeles de los que da el pequeño
-      const need = Math.max(st.clientWidth, st.clientHeight) * Math.min(window.devicePixelRatio || 1, 2);
-      const small = Math.max(set.sizes.m.width, set.sizes.m.height);
-      return { set, size: need > small * 1.15 ? "h" : "m" };
+      // tamaño: el grande si el pequeño se vería ampliado con el zoom de partida (misma cuenta que la precarga de Home)
+      const W = st.clientWidth,
+        H = st.clientHeight;
+      const z = set === SETS.ancho && W >= 900 ? Z_CERRADA : Z_MOVIL;
+      const m = set.sizes.m;
+      const k = Math.max(W / (m.width * (1 + (plateOf(set)?.ext ?? 0))), H / m.height) * z * Math.min(window.devicePixelRatio || 1, 2);
+      return { set, size: k > AMPLIACION_MAX ? "h" : "m" };
     };
     const makePack = (set: Set, size: SizeKey): Pack => {
       const { width, height, count } = set.sizes[size];
@@ -87,7 +93,26 @@ export default function Hero() {
       push(0);
       push(count - 1);
       for (const step of [16, 8, 4, 2, 1]) for (let i = 0; i < count; i += step) push(i);
-      return { set, size, FW: width, FH: height, N: count, frames: Array(count).fill(null), order, next: 0, inflight: 0 };
+      const pl = plateOf(set);
+      const pk: Pack = {
+        set, size, FW: width, FH: height, N: count, frames: Array(count).fill(null), order, next: 0, inflight: 0,
+        EXT: pl ? pl.ext * width : 0, F: pl ? pl.fade * width : 0, plate: null,
+      };
+      if (pl) {
+        const im = new window.Image();
+        im.decoding = "async";
+        im.src = `${BASE}/frames/${set.set}/plate-${size}.webp?v=${set.stamp}`;
+        im.decode().then(
+          () => {
+            if (disposed || pk !== pack) return;
+            pk.plate = im;
+            drawn = -1;
+            draw();
+          },
+          () => {},
+        );
+      }
+      return pk;
     };
     const pump = (pk: Pack) => {
       while (!disposed && pk === pack && pk.inflight < 6 && pk.next < pk.order.length) {
@@ -148,13 +173,14 @@ export default function Hero() {
     // que se vea entera antes que la posición.
     const view = (ff: number) => {
       const pk = pack!;
-      const { FW, FH } = pk;
+      const { FW, FH, EXT } = pk;
+      const VW = FW + EXT; // ancho disponible: prolongación + vídeo
       const landscape = pk.set.set === "ancho";
-      const sCover = Math.max(CW / FW, CH / FH);
+      const sCover = Math.max(CW / VW, CH / FH);
       const o = pk.set.open,
         c = pk.set.closed;
-      const L = (Math.min(o[0], c[0]) / 100) * FW,
-        R = (Math.max(o[2], c[2]) / 100) * FW;
+      const L = (Math.min(o[0], c[0]) / 100) * FW + EXT,
+        R = (Math.max(o[2], c[2]) / 100) * FW + EXT;
       const B = (Math.max(o[3], c[3]) / 100) * FH;
       // altura que ocupa ahora la hamburguesa: de la cerrada a la abierta (la corona sube casi toda en la primera mitad)
       const T = ((c[1] + (o[1] - c[1]) * sm(ff, 0, 0.45)) / 100) * FH;
@@ -172,7 +198,7 @@ export default function Hero() {
       const sxMin = R + 8 / s - vw,
         sxMax = L - 8 / s;
       sx = clamp(sx, Math.min(sxMin, sxMax), Math.max(sxMin, sxMax));
-      sx = clamp(sx, 0, FW - vw);
+      sx = clamp(sx, 0, VW - vw);
       let sy = (T + B) / 2 - 0.5 * vh + ((MB - MT) / 2) * vh;
       sy = clamp(sy, Math.min(B + MB * vh - vh, T - MT * vh), Math.max(B + MB * vh - vh, T - MT * vh));
       sy = clamp(sy, 0, FH - vh);
@@ -201,10 +227,20 @@ export default function Hero() {
       const i = near(pk, want);
       const v = view(ff);
       if (i >= 0 && (frameReady || Math.abs(i - want) <= 2)) {
-        const key = i * 10000 + Math.round(v.sx) + Math.round(v.sy) * 7 + Math.round(v.z * 1000) * 13;
+        const key = i * 10000 + Math.round(v.sx) + Math.round(v.sy) * 7 + Math.round(v.z * 1000) * 13 + (pk.plate ? 0.5 : 0);
         if (key !== drawn) {
           drawn = key;
-          ctx.drawImage(pk.frames[i]!, v.sx, v.sy, v.vw, v.vh, 0, 0, cv.width, cv.height);
+          if (!pk.EXT) {
+            ctx.drawImage(pk.frames[i]!, v.sx, v.sy, v.vw, v.vh, 0, 0, cv.width, cv.height);
+          } else {
+            // vídeo desplazado a la derecha y la prolongación del bar encima, fundida por su borde derecho
+            const k = cv.width / v.vw;
+            const dy = -v.sy * k;
+            ctx.fillStyle = "#0b0a09";
+            ctx.fillRect(0, 0, cv.width, cv.height);
+            ctx.drawImage(pk.frames[i]!, (pk.EXT - v.sx) * k, dy, pk.FW * k, pk.FH * k);
+            if (pk.plate) ctx.drawImage(pk.plate, -v.sx * k, dy, (pk.EXT + pk.F) * k, pk.FH * k);
+          }
         }
         if (!frameReady) {
           frameReady = true;
@@ -218,7 +254,7 @@ export default function Hero() {
         if (!el) return;
         const l = pk.set.labels[k];
         const a = sm(ff, 0.72 + k * 0.04, 0.84 + k * 0.04);
-        const x = ((l.right / 100) * pk.FW - v.sx) * v.s + gap;
+        const x = ((l.right / 100) * pk.FW + pk.EXT - v.sx) * v.s + gap;
         const y = ((l.y / 100) * pk.FH - v.sy) * v.s;
         const w = el.offsetWidth;
         const xx = Math.min(x, CW - w - 10);
@@ -226,7 +262,7 @@ export default function Hero() {
         el.style.transform = `translate3d(${xx + 16 * (1 - a)}px, ${y}px, 0) translateY(-50%)`;
       });
 
-      const h = sm(p, 0.56, 0.8);
+      const h = sm(p, 0.6, 0.7);
       if (titleA.current) titleA.current.style.transform = `translateY(${-110 * h}%)`;
       if (titleB.current) titleB.current.style.transform = `translateY(${110 * (1 - h)}%)`;
       if (cue.current) cue.current.style.opacity = String(1 - sm(p, 0, 0.08));

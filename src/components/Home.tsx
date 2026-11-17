@@ -19,18 +19,18 @@ import Reveals from "@/components/Reveals";
 import Boot from "@/components/Boot";
 import HERO_ANCHO from "@/data/hero-ancho.json";
 import HERO_ALTO from "@/data/hero-alto.json";
+import { AMPLIACION_MAX, Z_CERRADA, Z_MOVIL } from "@/components/sections/hero-zoom";
 import { schedule, site } from "@/data/site";
 import { dict, homeHref, menuHref, type Lang } from "@/i18n";
 import { SITE_URL } from "@/i18n/meta";
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
-// Precarga del primer fotograma del hero (el LCP) elegido como lo hará Hero.tsx: juego del tema activo y tamaño
-// según pantalla (h escritorio, d móvil de alta densidad, m móvil de baja). Antes se precargaba siempre el 2K
-// oscuro, que en un iPhone claro eran 300 KB tirados.
-// primer fotograma del hero según la forma de la pantalla (ancho/alto) y su tamaño, igual que elige Hero.tsx
-const first = (h: typeof HERO_ANCHO) => ({ set: h.set, v: h.stamp, mw: Math.max(h.sizes.m.width, h.sizes.m.height) });
-const preloadScript = `(function(){try{var A=${JSON.stringify(first(HERO_ANCHO))},V=${JSON.stringify(first(HERO_ALTO))};var nav=innerWidth>=900?88:72;var w=innerWidth,h=innerHeight-nav;var S=innerWidth>innerHeight?A:V;var need=Math.max(w,h)*Math.min(devicePixelRatio||1,2);var z=need>S.mw*1.15?"h":"m";var l=document.createElement("link");l.rel="preload";l.as="image";l.fetchPriority="high";l.href=${JSON.stringify(BASE)}+"/frames/"+S.set+"/"+z+"/frame_000.webp?v="+S.v;document.head.appendChild(l)}catch(e){}})();`;
+// Precarga del primer fotograma del hero (el LCP) con la misma elección que hace Hero.tsx: juego por la forma de la
+// pantalla (ancho/alto) y tamaño por los píxeles que hacen falta con el zoom de partida (h si m se vería ampliado).
+type HeroJson = Pick<typeof HERO_ALTO, "set" | "stamp" | "sizes"> & { plate?: { ext: number } };
+const first = (h: HeroJson, z: number) => ({ set: h.set, v: h.stamp, mw: h.sizes.m.width * (1 + (h.plate?.ext ?? 0)), mh: h.sizes.m.height, z });
+const preloadScript = `(function(){try{var A=${JSON.stringify(first(HERO_ANCHO, Z_CERRADA))},V=${JSON.stringify(first(HERO_ALTO, Z_MOVIL))};var nav=innerWidth>=900?88:72;var w=innerWidth,h=innerHeight-nav;var S=innerWidth>innerHeight?A:V;var zz=S===A&&w>=900?S.z:${Z_MOVIL};var k=Math.max(w/S.mw,h/S.mh)*zz*Math.min(devicePixelRatio||1,2);var z=k>${AMPLIACION_MAX}?"h":"m";var l=document.createElement("link");l.rel="preload";l.as="image";l.fetchPriority="high";l.href=${JSON.stringify(BASE)}+"/frames/"+S.set+"/"+z+"/frame_000.webp?v="+S.v;document.head.appendChild(l)}catch(e){}})();`;
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
