@@ -38,6 +38,8 @@ const nextConfig: NextConfig = {
   trailingSlash: true,
   cacheComponents: !isPages,
   partialPrefetching: !isPages,
+  // fotos de producto y recortes a calidad 90 y en AVIF cuando el navegador lo admite (con 75 se perdía detalle)
+  images: { qualities: [75, 90], formats: ["image/avif", "image/webp"] },
   turbopack: {
     rules: {
       "*.css": {

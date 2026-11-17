@@ -704,7 +704,7 @@
   position: relative;
   flex: none;
   width: min(54%, 50vmin);
-  aspect-ratio: 1200 / 1681; /* proporción de la Smash abierta (smash-abierta.webp) */
+  aspect-ratio: 1600 / 3018; /* proporción de la Smash abierta (smash-abierta-v2.webp) */
 }
 /* una imagen por tema: la del otro tema no se muestra */
 :root[data-theme="dark"] .inside__still--light,

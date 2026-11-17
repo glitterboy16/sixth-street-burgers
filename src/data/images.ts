@@ -23,14 +23,14 @@ export type SlotImage = {
 };
 
 export const slots: Record<SlotId, SlotImage | null> = {
-  "smash-burger": { src: "/images/carta/smash-burger-v3.webp", alt: "Smash Burger", width: 1400, height: 950, cutout: "contact" },
-  classic: { src: "/images/carta/classic-v2.webp", alt: "Classic", width: 1400, height: 999, cutout: "contact" },
-  "texas-cowboy": { src: "/images/carta/texas-cowboy-v2.webp", alt: "Texas Cowboy", width: 1400, height: 1018, cutout: "contact" },
-  "double-trouble": { src: "/images/carta/double-trouble-v2.webp", alt: "Double Trouble", width: 1400, height: 1459, cutout: "contact" },
-  "chicken-burger": { src: "/images/carta/chicken-burger-v3.webp", alt: "Chicken Burger", width: 1400, height: 1003, cutout: "contact" },
-  volcano: { src: "/images/carta/volcano-v3.webp", alt: "Hamburguesa con cascada de cheddar fundido", width: 1400, height: 1316, cutout: "float" },
-  // la Smash abierta por capas: último fotograma del vídeo de la portada, recortado
-  "que-lleva": { src: "/images/carta/smash-abierta.webp", alt: "La Smash Burger abierta por capas", width: 1200, height: 1681, cutout: "float" },
+  "smash-burger": { src: "/images/carta/smash-burger-v4.webp", alt: "Smash Burger", width: 2600, height: 1764, cutout: "contact" },
+  classic: { src: "/images/carta/classic-v4.webp", alt: "Classic", width: 1981, height: 1414, cutout: "contact" },
+  "texas-cowboy": { src: "/images/carta/texas-cowboy-v4.webp", alt: "Texas Cowboy", width: 1812, height: 1317, cutout: "contact" },
+  "double-trouble": { src: "/images/carta/double-trouble-v4.webp", alt: "Double Trouble", width: 1559, height: 1625, cutout: "contact" },
+  "chicken-burger": { src: "/images/carta/chicken-burger-v4.webp", alt: "Chicken Burger", width: 2600, height: 1863, cutout: "contact" },
+  volcano: { src: "/images/carta/volcano-v4.webp", alt: "Hamburguesa con cascada de cheddar fundido", width: 2600, height: 2444, cutout: "float" },
+  // la Smash abierta por capas: las mismas capas del hero en su posición abierta (renders/capas/), recortada
+  "que-lleva": { src: "/images/carta/smash-abierta-v2.webp", alt: "La Smash Burger abierta por capas", width: 1600, height: 3018, cutout: "float" },
   // foto con su fondo (no recortada)
   patatas: { src: "/images/carta/patatas.webp", alt: "Patatas fritas con salsa y queso rallado", width: 1086, height: 1448 },
 };

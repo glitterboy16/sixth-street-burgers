@@ -45,7 +45,7 @@ export default function ImageSlot({
   }
   return (
     <div className={`slot ${circle} ${className}`}>
-      <Image src={img.src} alt={text} fill sizes={sizes} priority={priority} style={{ objectFit: fit }} />
+      <Image src={img.src} alt={text} fill sizes={sizes} quality={90} priority={priority} style={{ objectFit: fit }} />
     </div>
   );
 }

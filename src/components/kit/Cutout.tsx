@@ -24,6 +24,7 @@ export default function Cutout({ src, alt, sizes, priority, contact = true, ambi
         alt={alt}
         fill
         sizes={sizes}
+        quality={90}
         priority={priority}
         className={ambient ? "cutout__img cutout__img--ambient" : "cutout__img"}
         style={{ objectFit: "contain" }}
