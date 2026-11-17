@@ -32,7 +32,7 @@ export const slots: Record<SlotId, SlotImage | null> = {
   // la Smash abierta por capas: las mismas capas del hero en su posición abierta (renders/capas/), recortada
   "que-lleva": { src: "/images/carta/smash-abierta-v2.webp", alt: "La Smash Burger abierta por capas", width: 1600, height: 3018, cutout: "float" },
   // foto con su fondo (no recortada)
-  patatas: { src: "/images/carta/patatas.webp", alt: "Patatas fritas con salsa y queso rallado", width: 1086, height: 1448 },
+  patatas: { src: "/images/carta/patatas-v2.webp", alt: "Patatas fritas con salsa y queso rallado", width: 1086, height: 1086 },
 };
 
 export const placeholders: Record<SlotId, string> = {

@@ -39,6 +39,9 @@ export default function Hero() {
   const titleA = useRef<HTMLHeadingElement>(null);
   const titleB = useRef<HTMLParagraphElement>(null);
   const cue = useRef<HTMLParagraphElement>(null);
+  const titles = useRef<HTMLDivElement>(null);
+  const lead = useRef<HTMLParagraphElement>(null);
+  const actions = useRef<HTMLDivElement>(null);
   const labels = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
@@ -144,6 +147,20 @@ export default function Hero() {
     let secTop = 0,
       range = 1;
     let isMobile = window.innerWidth < 640;
+    // vertical (móvil): dónde acaban el titular y el texto y dónde empiezan los botones, en px del escenario
+    let titlesBottom = 0,
+      leadBottom = 0,
+      actionsTop = 1;
+    const offTop = (el: HTMLElement) => {
+      // offsetTop no depende de las animaciones de entrada ni de los transform
+      let y = 0;
+      let e: HTMLElement | null = el;
+      while (e && e !== st) {
+        y += e.offsetTop;
+        e = e.offsetParent as HTMLElement | null;
+      }
+      return y;
+    };
     const fit = () => {
       const want = choose();
       if (!pack || pack.set !== want.set || pack.size !== want.size) {
@@ -153,6 +170,9 @@ export default function Hero() {
       CW = st.clientWidth;
       CH = st.clientHeight;
       isMobile = window.innerWidth < 640;
+      titlesBottom = titles.current ? offTop(titles.current) + titles.current.offsetHeight : 0;
+      leadBottom = lead.current ? offTop(lead.current) + lead.current.offsetHeight : titlesBottom;
+      actionsTop = actions.current ? offTop(actions.current) : CH;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = Math.round(CW * dpr),
         h = Math.round(CH * dpr);
@@ -195,7 +215,28 @@ export default function Hero() {
         Tp = c[1] + (o[1] - c[1]) * sm(ff, 0, 0.45);
       }
       const T = (Tp / 100) * FH;
-      const MT = landscape ? 0.05 : 0.04,
+      if (!landscape) {
+        // VERTICAL (móvil y tablet de pie): la hamburguesa entera entre el titular (y el texto, mientras se ve) y los
+        // botones, para que «HECHA AL MOMENTO» y la hamburguesa abierta se vean sin pisarse. Si no cabe, la cámara se
+        // aleja y/o el vídeo baja un poco: arriba queda el fondo oscuro del bar, fundido con el vídeo.
+        const leadFade = sm(ff, 0.03, 0.16);
+        const topPx = titlesBottom + (leadBottom - titlesBottom) * (1 - leadFade) + 14;
+        const botPx = Math.max(CH - actionsTop, 0) + 14;
+        const band = Math.max(80, CH - topPx - botPx);
+        const zWant = 1 + (Z_MOVIL - 1) * (1 - sm(ff, 0, 0.6));
+        const zFit = band / ((B - T) * sCover);
+        const zMin = CW / (FW * sCover); // por debajo quedarían bandas a los lados
+        const z = Math.max(Math.min(zWant, zFit), zMin);
+        const s = sCover * z;
+        const fw = FW * s,
+          fh = FH * s;
+        let ox = CW / 2 - ((L + R) / 2) * s;
+        ox = clamp(ox, Math.min(CW - fw, 0), Math.max(CW - fw, 0));
+        let oy = topPx + (band - (B - T) * s) / 2 - T * s;
+        oy = clamp(oy, CH - fh, Math.max(CH - fh, 0.24 * CH));
+        return { dst: true, ox, oy, sx: 0, sy: 0, vw: 0, vh: 0, s, z };
+      }
+      const MT = 0.05,
         MB = 0.1; // márgenes arriba y abajo, en fracción del alto de la pantalla
       let z = landscape && CW >= 900 ? Z_CERRADA + (Z_ABIERTA - Z_CERRADA) * sm(ff, 0.05, 0.95) : 1 + (Z_MOVIL - 1) * (1 - sm(ff, 0, 0.6));
       const zFit = (CH * (1 - MT - MB)) / ((B - T) * sCover); // zoom máximo con el que la hamburguesa cabe entera
@@ -213,7 +254,7 @@ export default function Hero() {
       let sy = (T + B) / 2 - 0.5 * vh + ((MB - MT) / 2) * vh;
       sy = clamp(sy, Math.min(B + MB * vh - vh, T - MT * vh), Math.max(B + MB * vh - vh, T - MT * vh));
       sy = clamp(sy, 0, FH - vh);
-      return { sx, sy, vw, vh, s, z };
+      return { dst: false, ox: 0, oy: 0, sx, sy, vw, vh, s, z };
     };
 
     let drawn = -1;
@@ -238,10 +279,25 @@ export default function Hero() {
       const i = near(pk, want);
       const v = view(ff);
       if (i >= 0 && (frameReady || Math.abs(i - want) <= 2)) {
-        const key = i * 10000 + Math.round(v.sx) + Math.round(v.sy) * 7 + Math.round(v.z * 1000) * 13 + (pk.plate ? 0.5 : 0);
+        const key =
+          i * 10000 + Math.round(v.sx) + Math.round(v.sy) * 7 + Math.round(v.z * 1000) * 13 + Math.round(v.ox) * 31 + Math.round(v.oy) * 37 + (pk.plate ? 0.5 : 0);
         if (key !== drawn) {
           drawn = key;
-          if (!pk.EXT) {
+          if (v.dst) {
+            // vertical: el fotograma entero colocado en (ox, oy) a escala s; si baja, el hueco de arriba es el fondo
+            // oscuro del bar con un fundido para que no se vea el borde
+            const k = cv.width / CW;
+            ctx.fillStyle = "#0b0a09";
+            ctx.fillRect(0, 0, cv.width, cv.height);
+            ctx.drawImage(pk.frames[i]!, v.ox * k, v.oy * k, pk.FW * v.s * k, pk.FH * v.s * k);
+            if (v.oy > 0.5) {
+              const g = ctx.createLinearGradient(0, v.oy * k, 0, (v.oy + 90) * k);
+              g.addColorStop(0, "rgba(11,10,9,1)");
+              g.addColorStop(1, "rgba(11,10,9,0)");
+              ctx.fillStyle = g;
+              ctx.fillRect(0, v.oy * k, cv.width, 90 * k);
+            }
+          } else if (!pk.EXT) {
             ctx.drawImage(pk.frames[i]!, v.sx, v.sy, v.vw, v.vh, 0, 0, cv.width, cv.height);
           } else {
             // vídeo desplazado a la derecha y la prolongación del bar encima, fundida por su borde derecho
@@ -260,9 +316,15 @@ export default function Hero() {
       }
 
       // etiquetas: punto a la derecha de su capa (en px de pantalla), texto dentro de la pantalla
+      // en vertical (móvil) no hay etiquetas: se quedaban encima de la hamburguesa; se ve sola con «HECHA AL MOMENTO»
       const gap = isMobile ? 6 : 14;
+      const portrait = pk.set.set === "alto";
       labels.current.forEach((el, k) => {
         if (!el) return;
+        if (portrait) {
+          el.style.opacity = "0";
+          return;
+        }
         const l = pk.set.labels[k];
         const a = sm(ff, 0.72 + k * 0.04, 0.84 + k * 0.04);
         const x = ((l.right / 100) * pk.FW + pk.EXT - v.sx) * v.s + gap;
@@ -277,12 +339,12 @@ export default function Hero() {
       if (titleA.current) titleA.current.style.transform = `translateY(${-110 * h}%)`;
       if (titleB.current) titleB.current.style.transform = `translateY(${110 * (1 - h)}%)`;
       if (cue.current) cue.current.style.opacity = String(1 - sm(p, 0, 0.08));
-      // en vertical el texto va encima de la hamburguesa: se aparta cuando las capas suben
-      if (copy.current) {
-        const portrait = pk.set.set === "alto";
-        const fade = portrait ? sm(ff, 0.12, 0.42) : 0;
-        copy.current.style.opacity = String(1 - fade);
-        copy.current.style.transform = fade ? `translateY(${-24 * fade}px)` : "";
+      // en vertical el titular se queda (y cambia de «MUERDE FUERTE» a «HECHA AL MOMENTO»); solo el texto de debajo se
+      // aparta cuando las capas suben. Con !important porque la animación de entrada (fill both) manda sobre el estilo
+      if (lead.current) {
+        const lf = portrait ? sm(ff, 0.03, 0.16) : 0;
+        if (lf > 0) lead.current.style.setProperty("opacity", String(1 - lf), "important");
+        else lead.current.style.removeProperty("opacity");
       }
     };
 
@@ -359,7 +421,7 @@ export default function Hero() {
 
         <div className="hero__grid">
           <div ref={copy} className="hero__copy">
-            <div className="hero__titles hero__in" style={{ "--i": 0 } as React.CSSProperties}>
+            <div ref={titles} className="hero__titles hero__in" style={{ "--i": 0 } as React.CSSProperties}>
               <h1 ref={titleA} className="display">
                 {t.hero.titleA[0]}
                 <br />
@@ -371,11 +433,11 @@ export default function Hero() {
                 {t.hero.titleB[1]}
               </p>
             </div>
-            <p className="lead hero__in" style={{ "--i": 1 } as React.CSSProperties}>
+            <p ref={lead} className="lead hero__in" style={{ "--i": 1 } as React.CSSProperties}>
               {t.hero.lead}
             </p>
           </div>
-          <div className="hero__actions hero__in" style={{ "--i": 2 } as React.CSSProperties}>
+          <div ref={actions} className="hero__actions hero__in" style={{ "--i": 2 } as React.CSSProperties}>
             <a href="#carta" className="btn btn--primary">
               {t.hero.ctaMenu}
             </a>
