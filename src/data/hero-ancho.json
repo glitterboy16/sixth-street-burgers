@@ -1,7 +1,12 @@
 {
  "set": "ancho",
- "stamp": "mwkx14so",
+ "stamp": "mwlh0cxy",
  "sizes": {
+  "x": {
+   "width": 3840,
+   "height": 2198,
+   "count": 223
+  },
   "h": {
    "width": 1920,
    "height": 1099,

@@ -29,11 +29,10 @@ const META = JSON.parse(fs.readFileSync(path.resolve(arg("meta")), "utf8"));
 const OUT = path.resolve(`public/frames/${SET}`);
 const MANIFEST = path.resolve(`src/data/hero-${SET}.json`);
 const STAMP = Date.now().toString(36);
-// h: pantallas grandes o de alta densidad; m: el resto (la web elige según los píxeles reales del canvas)
-// proporción nativa del vídeo de MiniMax H3 2K (2544×1456)
-// ancho h = resolución nativa del vídeo (2544x1456): en pantallas grandes el canvas pedía más de 1920 px y estiraba
-// ancho: x = 4K (solo para los momentos de reposo en pantallas grandes), h = scroll en ordenador, m = pantallas pequeñas
-const SIZES = SET === "ancho" ? { x: [3840, 2198, 84], h: [2560, 1465, 82], m: [1280, 733, 80] } : { h: [1099, 1920, 76], m: [733, 1280, 74] };
+// h: pantallas grandes o de alta densidad; m: el resto (la web elige según los píxeles reales del canvas).
+// ancho: x = 4K (solo cuando la hamburguesa está parada, en pantallas que lo necesitan); h y m para el scroll, con los
+// mismos píxeles de siempre para que el scroll siga igual de fluido. Fuente: renders/upscale/final4k (Topaz Proteus 2x).
+const SIZES = SET === "ancho" ? { x: [3840, 2198, 84], h: [1920, 1099, 78], m: [1280, 733, 76] } : { h: [1099, 1920, 76], m: [733, 1280, 74] };
 // --vf: filtro de ffmpeg al extraer (p. ej. "eq=gamma=1.12" para igualar el brillo de la foto de partida)
 const VF = arg("vf", "");
 // --plate DIR (solo "ancho"): prolongación del bar a la izquierda hecha con renders/smash-fondo/herramientas/
@@ -59,8 +58,10 @@ await Promise.all(
     for (let i = w; i < files.length; i += 6) {
       const src = path.join(tmp, files[i]);
       for (const [s, [W, H, q]] of Object.entries(SIZES)) {
+        // recorte anclado arriba: con "centre", al recortar 1-2 px el 4K perdía 1 px arriba y el h no, y al pasar
+        // de un tamaño a otro en reposo la imagen saltaba medio píxel
         await sharp(src)
-          .resize(W, H, { fit: "cover", kernel: "lanczos3" })
+          .resize(W, H, { fit: "cover", position: "top", kernel: "lanczos3" })
           .webp({ quality: q, effort: 5, smartSubsample: true })
           .toFile(path.join(OUT, s, `frame_${String(i).padStart(3, "0")}.webp`));
       }
